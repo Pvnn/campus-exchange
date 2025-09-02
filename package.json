@@ -9,7 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@supabase/ssr": "^0.7.0",
+=======
+    "@headlessui/react": "^2.2.7",
+    "@heroicons/react": "^2.2.0",
+>>>>>>> 78c329f (Updated Layout and adjusted styles)
     "@supabase/supabase-js": "^2.56.1",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",

@@ -8,7 +8,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 export default function Layout({ children }) {
   const pathname = usePathname();
 
-  const isLoggedIn = true;
+  const isLoggedIn = false;
 
   const primaryLinks = [
     { name: "Home", href: "/" },
