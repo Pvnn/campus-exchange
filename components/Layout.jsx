@@ -1,14 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
 
 export default function Layout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
 
-  const isLoggedIn = false;
+  // ✅ Manage login state here
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    router.push("/"); // 👈 redirect to home page when logged out
+  };
 
   const primaryLinks = [
     { name: "Home", href: "/" },
@@ -22,9 +30,12 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white"> {/* Black background */}
-      {/* Navbar */}
-      <Disclosure as="nav" className="bg-blue-600">
+    <div className="min-h-screen flex flex-col bg-white text-black">
+      {/* Sticky Navbar */}
+      <Disclosure
+        as="nav"
+        className="sticky top-0 z-50 bg-white border-b shadow-sm"
+      >
         {({ open }) => (
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -33,32 +44,30 @@ export default function Layout({ children }) {
                 <div className="flex items-center">
                   <Link
                     href="/"
-                    className="text-white text-2xl italic font-[cursive]"
+                    className="text-xl font-bold tracking-tight text-gray-800"
                   >
                     Campus Exchange
                   </Link>
                 </div>
 
                 {/* Desktop nav */}
-                <div className="flex-grow flex justify-center">
-                  <div className="hidden md:flex md:items-center md:space-x-6">
-                    {primaryLinks.map((item) => {
-                      const active = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={`text-white/90 hover:text-white transition ${
-                            active
-                              ? "font-semibold underline underline-offset-4"
-                              : ""
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      );
-                    })}
-                  </div>
+                <div className="hidden md:flex md:items-center md:space-x-6">
+                  {primaryLinks.map((item) => {
+                    const active = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`hover:text-black transition ${
+                          active
+                            ? "font-semibold underline underline-offset-4"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {/* Right-side auth controls */}
@@ -67,13 +76,13 @@ export default function Layout({ children }) {
                     <div className="ml-4 flex items-center space-x-2">
                       <Link
                         href="/login"
-                        className="rounded-md bg-white text-blue-600 px-3 py-2 text-sm font-medium shadow hover:bg-gray-100"
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100"
                       >
                         Login
                       </Link>
                       <Link
                         href="/register"
-                        className="rounded-md bg-yellow-400 text-black px-3 py-2 text-sm font-medium shadow hover:bg-yellow-300"
+                        className="rounded-md bg-black text-white px-3 py-2 text-sm font-medium hover:bg-gray-800"
                       >
                         Register
                       </Link>
@@ -81,14 +90,15 @@ export default function Layout({ children }) {
                   ) : (
                     <div className="ml-4 flex items-center space-x-4">
                       <Link
-                        href="/profile"
-                        className="rounded-md bg-white/10 text-white px-3 py-2 text-sm font-medium hover:bg-white/20"
+                        href="/details"
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100"
                       >
                         Profile
                       </Link>
                       <button
                         type="button"
-                        className="rounded-md bg-white text-blue-600 px-3 py-2 text-sm font-medium shadow hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="rounded-md bg-black text-white px-3 py-2 text-sm font-medium hover:bg-gray-800"
                       >
                         Logout
                       </button>
@@ -98,7 +108,7 @@ export default function Layout({ children }) {
 
                 {/* Mobile menu button */}
                 <div className="md:hidden">
-                  <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-white/50">
+                  <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black/20">
                     <span className="sr-only">Open main menu</span>
                     {open ? (
                       <XMarkIcon className="h-6 w-6" />
@@ -111,7 +121,7 @@ export default function Layout({ children }) {
             </div>
 
             {/* Mobile panel */}
-            <Disclosure.Panel className="md:hidden">
+            <Disclosure.Panel className="md:hidden border-t bg-white">
               <div className="space-y-1 px-4 pb-4 pt-2">
                 {primaryLinks.map((item) => {
                   const active = pathname === item.href;
@@ -119,8 +129,8 @@ export default function Layout({ children }) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`block rounded-md px-3 py-2 text-base text-white hover:bg-blue-500 ${
-                        active ? "bg-blue-700" : ""
+                      className={`block rounded-md px-3 py-2 text-base hover:bg-gray-100 ${
+                        active ? "font-semibold underline" : "text-gray-700"
                       }`}
                     >
                       {item.name}
@@ -132,13 +142,13 @@ export default function Layout({ children }) {
                   <div className="mt-2 space-y-2">
                     <Link
                       href="/login"
-                      className="block rounded-md bg-white text-blue-600 px-3 py-2 text-base font-medium"
+                      className="block rounded-md border border-gray-300 px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
                     >
                       Login
                     </Link>
                     <Link
                       href="/register"
-                      className="block rounded-md bg-yellow-400 text-black px-3 py-2 text-base font-medium"
+                      className="block rounded-md bg-black text-white px-3 py-2 text-base font-medium hover:bg-gray-800"
                     >
                       Register
                     </Link>
@@ -146,14 +156,15 @@ export default function Layout({ children }) {
                 ) : (
                   <div className="mt-2 space-y-2">
                     <Link
-                      href="/profile"
-                      className="block rounded-md bg-white/10 text-white px-3 py-2 text-base font-medium hover:bg-white/20"
+                      href="/details"
+                      className="block rounded-md border border-gray-300 px-3 py-2 text-base font-medium hover:bg-gray-100"
                     >
                       Profile
                     </Link>
                     <button
                       type="button"
-                      className="w-full text-left rounded-md bg-white text-blue-600 px-3 py-2 text-base font-medium"
+                      onClick={handleLogout}
+                      className="w-full text-left rounded-md bg-black text-white px-3 py-2 text-base font-medium hover:bg-gray-800"
                     >
                       Logout
                     </button>
@@ -169,7 +180,7 @@ export default function Layout({ children }) {
       <main className="flex-1 p-6">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-center py-4 text-white">
+      <footer className="bg-white border-t py-4 text-center text-gray-500 text-sm">
         © {new Date().getFullYear()} Campus Exchange. All rights reserved.
       </footer>
     </div>
