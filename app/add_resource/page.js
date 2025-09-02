@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function AddResourcePage() {
   const router = useRouter();
-  const isLoggedIn = true; // change to false to test redirect
+  const isLoggedIn = false; // change to false to test redirect
 
   useEffect(() => {
     if (!isLoggedIn) {
