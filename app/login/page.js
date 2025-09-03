@@ -53,10 +53,18 @@ export default function LoginPage() {
         <h2 className="mt-10 text-center text-4xl font-bold tracking-tight text-gray-900">
           Sign in to your account
         </h2>
-        <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate autoComplete="off">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 space-y-6"
+          noValidate
+          autoComplete="off"
+        >
           {/* Email field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-black">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-black"
+            >
               Email address
             </label>
             <div className="mt-2">
@@ -83,7 +91,10 @@ export default function LoginPage() {
           {/* Password field */}
           <div>
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="block text-sm font-medium text-black">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-black"
+              >
                 Password
               </label>
               <div className="text-sm">
@@ -159,7 +170,11 @@ export default function LoginPage() {
     disabled:opacity-60 transition-colors duration-200"
               disabled={loading}
             >
-              {loading ? <span className="animate-pulse">Logging in...</span> : "Sign in"}
+              {loading ? (
+                <span className="animate-pulse">Logging in...</span>
+              ) : (
+                "Sign in"
+              )}
             </button>
           </div>
         </form>
