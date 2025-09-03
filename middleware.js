@@ -1,11 +1,12 @@
 import { updateSession } from '@/utils/supabase/middleware'
+import { NextResponse } from 'next/server'
 
 export async function middleware(request) {
   // Update the user session using Supabase utilities
   const response = await updateSession(request)
 
   // Check if user is trying to access protected routes
-  const protectedRoutes = ['/dashboard', '/add-resource', '/transactions']
+  const protectedRoutes = ['/dashboard', '/add_resource', '/transactions', '/profile']
   const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
