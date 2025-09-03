@@ -1,79 +1,74 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import { useAuth } from '@/contexts/AuthContext';
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
 
 export default function Layout({ children }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const { user, loading, logout } = useAuth(); // ✅ Use AuthContext
+  
+  // Pages that should not have navbar/footer
+  const noLayoutPages = ['/login', '/register'];
+  
+  // If it's an auth page, return simple layout
+  if (noLayoutPages.includes(pathname)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        {children}
+      </div>
+    );
+  }
 
-  // ✅ Manage login state here
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    router.push("/"); // 👈 redirect to home page when logged out
-  };
-
-  const primaryLinks = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    ...(isLoggedIn
-      ? [
-          { name: "Dashboard", href: "/dashboard" },
-          { name: "Contact", href: "/contact" },
-        ]
-      : [{ name: "Contact", href: "/contact" }]),
-  ];
-
+  // Full layout for all other pages
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
-      {/* Sticky Navbar */}
-      <Disclosure
-        as="nav"
-        className="sticky top-0 z-50 bg-white border-b shadow-sm"
-      >
+      {/* Navbar with Auth Context */}
+      <Disclosure as="nav" className="sticky top-0 z-50 bg-white border-b shadow-sm">
         {({ open }) => (
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="flex h-16 items-center justify-between">
                 {/* Brand */}
-                <div className="flex items-center">
-                  <Link
-                    href="/"
-                    className="text-xl font-bold tracking-tight text-gray-800"
-                  >
-                    Campus Exchange
-                  </Link>
-                </div>
+                <Link href="/" className="text-xl font-bold tracking-tight text-gray-800">
+                  Campus Exchange
+                </Link>
 
-                {/* Desktop nav */}
+                {/* Desktop Navigation */}
                 <div className="hidden md:flex md:items-center md:space-x-6">
-                  {primaryLinks.map((item) => {
-                    const active = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={`hover:text-black transition ${
-                          active
-                            ? "font-semibold underline underline-offset-4"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    );
-                  })}
+                  <Link href="/" className="text-gray-600 hover:text-black">Home</Link>
+                  <Link href="/about" className="text-gray-600 hover:text-black">About</Link>
+                  {user && (
+                    <Link href="/dashboard" className="text-gray-600 hover:text-black">Dashboard</Link>
+                  )}
+                  <Link href="/contact" className="text-gray-600 hover:text-black">Contact</Link>
                 </div>
 
-                {/* Right-side auth controls */}
+                {/* Auth Section - Updated with AuthContext */}
                 <div className="hidden md:flex md:items-center">
-                  {!isLoggedIn ? (
-                    <div className="ml-4 flex items-center space-x-2">
+                  {loading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+                  ) : user ? (
+                    // ✅ User is logged in - show user info and logout
+                    <div className="flex items-center space-x-4">
+                      <Link
+                        href="/profile"
+                        className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Welcome, {user.profile?.name || user.email?.split('@')[0] || 'User'}
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className="rounded-md bg-black text-white px-3 py-2 text-sm font-medium hover:bg-gray-800"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    // ✅ User is NOT logged in - show login/register links
+                    <div className="flex items-center space-x-2">
                       <Link
                         href="/login"
                         className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100"
@@ -87,87 +82,52 @@ export default function Layout({ children }) {
                         Register
                       </Link>
                     </div>
-                  ) : (
-                    <div className="ml-4 flex items-center space-x-4">
-                      <Link
-                        href="/details"
-                        className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100"
-                      >
-                        Profile
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="rounded-md bg-black text-white px-3 py-2 text-sm font-medium hover:bg-gray-800"
-                      >
-                        Logout
-                      </button>
-                    </div>
                   )}
                 </div>
 
                 {/* Mobile menu button */}
                 <div className="md:hidden">
-                  <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black/20">
-                    <span className="sr-only">Open main menu</span>
-                    {open ? (
-                      <XMarkIcon className="h-6 w-6" />
-                    ) : (
-                      <Bars3Icon className="h-6 w-6" />
-                    )}
+                  <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100">
+                    {open ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
                   </Disclosure.Button>
                 </div>
               </div>
             </div>
 
-            {/* Mobile panel */}
+            {/* Mobile Navigation Panel */}
             <Disclosure.Panel className="md:hidden border-t bg-white">
               <div className="space-y-1 px-4 pb-4 pt-2">
-                {primaryLinks.map((item) => {
-                  const active = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`block rounded-md px-3 py-2 text-base hover:bg-gray-100 ${
-                        active ? "font-semibold underline" : "text-gray-700"
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  );
-                })}
-
-                {!isLoggedIn ? (
+                <Link href="/" className="block rounded-md px-3 py-2 text-base hover:bg-gray-100">Home</Link>
+                <Link href="/about" className="block rounded-md px-3 py-2 text-base hover:bg-gray-100">About</Link>
+                {user && (
+                  <Link href="/dashboard" className="block rounded-md px-3 py-2 text-base hover:bg-gray-100">Dashboard</Link>
+                )}
+                <Link href="/contact" className="block rounded-md px-3 py-2 text-base hover:bg-gray-100">Contact</Link>
+                
+                {/* Mobile Auth Section */}
+                {loading ? (
+                  <div className="animate-pulse bg-gray-200 h-10 rounded mt-2"></div>
+                ) : user ? (
+                  // ✅ Mobile - User logged in
                   <div className="mt-2 space-y-2">
                     <Link
-                      href="/login"
-                      className="block rounded-md border border-gray-300 px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="block rounded-md bg-black text-white px-3 py-2 text-base font-medium hover:bg-gray-800"
-                    >
-                      Register
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    <Link
-                      href="/details"
+                      href="/profile"
                       className="block rounded-md border border-gray-300 px-3 py-2 text-base font-medium hover:bg-gray-100"
                     >
-                      Profile
+                      {user.profile?.name || user.email}
                     </Link>
                     <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="w-full text-left rounded-md bg-black text-white px-3 py-2 text-base font-medium hover:bg-gray-800"
+                      onClick={logout}
+                      className="block w-full text-left rounded-md bg-black text-white px-3 py-2 text-base font-medium hover:bg-gray-800"
                     >
                       Logout
                     </button>
+                  </div>
+                ) : (
+                  // ✅ Mobile - User NOT logged in
+                  <div className="mt-2 space-y-2">
+                    <Link href="/login" className="block rounded-md border px-3 py-2 text-base hover:bg-gray-100">Login</Link>
+                    <Link href="/register" className="block rounded-md bg-black text-white px-3 py-2 text-base hover:bg-gray-800">Register</Link>
                   </div>
                 )}
               </div>
@@ -176,12 +136,12 @@ export default function Layout({ children }) {
         )}
       </Disclosure>
 
-      {/* Page content */}
-      <main className="flex-1 p-6">{children}</main>
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-white border-t py-4 text-center text-gray-500 text-sm">
-        © {new Date().getFullYear()} Campus Exchange. All rights reserved.
+      <footer className="border-t p-4 text-center text-sm text-gray-600">
+        © 2025 Campus Exchange. All rights reserved.
       </footer>
     </div>
   );

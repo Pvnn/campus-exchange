@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from '@/utils/supabase/client';
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -13,6 +16,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const { setUser } = useAuth();
+  const supabase = createClient();
 
   const validate = () => {
     const newErrors = {};
@@ -35,22 +41,55 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const validationErrors = validate();
-    if (Object.keys(validationErrors).length)
+    if (Object.keys(validationErrors).length) {
       return setErrors(validationErrors);
-
+    }
     setLoading(true);
     setApiError("");
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const { data } = await supabase.auth.getUser();
+        if (data.user) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('name, email')
+            .eq('id', data.user.id)
+            .single();
+          
+          setUser({ ...data.user, profile });
+        }
+        router.push('/dashboard');
+      } else {
+        setApiError(data.error || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setApiError('Network error. Please try again.');
+    } finally {
       setLoading(false);
-      setApiError("Invalid credentials");
-    }, 1200);
+    }
   };
 
+
   return (
-    <div className="flex min-h-screen flex-col justify-center items-center px-6 py-12 lg:px-8">
+    <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:w-full sm:max-w-sm">
-        <h2 className="mt-10 text-center text-4xl font-bold tracking-tight text-gray-900">
+        <h2 className="mt-10 text-center text-3xl font-bold tracking-tight text-gray-900">
           Sign in to your account
         </h2>
         <form
