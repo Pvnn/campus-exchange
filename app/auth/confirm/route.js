@@ -23,7 +23,7 @@ export async function GET(request) {
     }
   }
 
-  // Error: Redirect to error page or home with error
+  // Error: Redirect to error page with error
   const errorUrl = new URL('/?error=confirmation_failed', request.url)
   return NextResponse.redirect(errorUrl)
 }

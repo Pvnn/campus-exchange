@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const router = useRouter();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -38,6 +39,7 @@ export function AuthProvider({ children }) {
         setUser(null);
       }
       setLoading(false);
+      setInitialized(true);
     };
 
     getInitialSession();
@@ -46,25 +48,36 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event);
-        
-        if (session?.user) {
-          // Fetch fresh profile data
-          const { data: profile } = await supabase
-            .from('users')
-            .select('name, email')
-            .eq('id', session.user.id)
-            .single();
-          
-          setUser({ ...session.user, profile });
-        } else {
+        if(event=='TOKEN_REFRESHED' && initialized){
+          if (session?.user) {
+            // Fetch fresh profile data
+            const { data: profile } = await supabase
+              .from('users')
+              .select('name, email')
+              .eq('id', session.user.id)
+              .single();
+            
+            setUser({ ...session.user, profile });
+          }
+          return;
+        }
+        if (event === 'SIGNED_OUT') {
           setUser(null);
+        } else if (session?.user) {
+            const { data: profile } = await supabase
+                .from('users')
+                .select('name, email')
+                .eq('id', session.user.id)
+                .single();
+            setUser({ ...session.user, profile });
         }
         setLoading(false);
+        setInitialized(true);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialized]);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -76,6 +89,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    initialized,
     logout,
     setUser,
   };

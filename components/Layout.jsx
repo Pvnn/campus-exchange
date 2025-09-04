@@ -8,10 +8,10 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function Layout({ children }) {
   const pathname = usePathname();
-  const { user, loading, logout } = useAuth(); // ✅ Use AuthContext
+  const { user, loading, initialized, logout } = useAuth();
   
   // Pages that should not have navbar/footer
-  const noLayoutPages = ['/login', '/register'];
+  const noLayoutPages = ['/login', '/register', '/error'];
   
   // If it's an auth page, return simple layout
   if (noLayoutPages.includes(pathname)) {
@@ -48,10 +48,10 @@ export default function Layout({ children }) {
 
                 {/* Auth Section - Updated with AuthContext */}
                 <div className="hidden md:flex md:items-center">
-                  {loading ? (
+                  {!initialized && loading ? (
                     <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
                   ) : user ? (
-                    // ✅ User is logged in - show user info and logout
+                    // User is logged in - show user info and logout
                     <div className="flex items-center space-x-4">
                       <Link
                         href="/profile"
@@ -67,7 +67,7 @@ export default function Layout({ children }) {
                       </button>
                     </div>
                   ) : (
-                    // ✅ User is NOT logged in - show login/register links
+                    // User is NOT logged in - show login/register links
                     <div className="flex items-center space-x-2">
                       <Link
                         href="/login"
@@ -124,7 +124,7 @@ export default function Layout({ children }) {
                     </button>
                   </div>
                 ) : (
-                  // ✅ Mobile - User NOT logged in
+                  // Mobile - User NOT logged in
                   <div className="mt-2 space-y-2">
                     <Link href="/login" className="block rounded-md border px-3 py-2 text-base hover:bg-gray-100">Login</Link>
                     <Link href="/register" className="block rounded-md bg-black text-white px-3 py-2 text-base hover:bg-gray-800">Register</Link>
