@@ -1,67 +1,47 @@
 "use client";
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export default function ProfilePage() {
+  const { user } = useAuth();
   const router = useRouter();
 
-  // Dummy variable for logged-in status
-  // true = logged in, false = not logged in
-  const isLoggedIn = true; // ✅ flipped back to correct logic
-
   useEffect(() => {
-    if (!isLoggedIn) {
-      // 👉 If not logged in, redirect to login page
-      router.push("/login"); // 🔑 later, replace with your actual login page
+    if (!user) {
+      router.push("/login");
     }
-    // If logged in → stay on Update Profile
-  }, [isLoggedIn, router]);
+  }, [user, router]);
+
+  if (!user) return null; // avoid rendering before redirect
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-6">
-      <h1 className="text-3xl font-bold mb-8">Update Profile</h1>
+      <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
 
-      <form className="space-y-6">
-        {/* Name */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Name</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-lg"
-            placeholder="Enter your name"
-            required
-          />
-        </div>
+      <div className="space-y-4 text-gray-700">
+        <p>
+          <strong>Name:</strong> {user.profile?.name || "Not set"}
+        </p>
+        <p>
+          <strong>Email:</strong> {user.email || "Not set"}
+        </p>
+        <p>
+          <strong>Phone:</strong> {user.profile?.phone || "Not set"}
+        </p>
+        <p>
+          <strong>Bio:</strong> {user.profile?.bio || "Not set"}
+        </p>
+      </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Email</label>
-          <input
-            type="email"
-            className="w-full p-3 border rounded-lg"
-            placeholder="Enter your email"
-            required
-          />
-        </div>
-
-        {/* Bio */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Bio</label>
-          <textarea
-            className="w-full p-3 border rounded-lg"
-            rows="4"
-            placeholder="Write something about yourself..."
-          />
-        </div>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
-          Save Changes
-        </button>
-      </form>
+      <Link
+        href="/profile/update"
+        className="inline-block mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+      >
+        Update Profile
+      </Link>
     </div>
   );
 }
