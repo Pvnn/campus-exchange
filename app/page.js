@@ -1,5 +1,6 @@
 // app/page.js
-
+import React from "react";
+import AddResourceForm from "../components/AddResourceForm";
 export default function HomePage() {
   // Dummy resource data
   const resources = [
