@@ -1,12 +1,7 @@
 // app/page.js
-"use client"; // ⚠ Must be first line
-
-import { useState } from "react";
+import React from "react";
 import AddResourceForm from "../components/AddResourceForm";
-
 export default function HomePage() {
-  const [showForm, setShowForm] = useState(false);
-
   // Dummy resource data
   const resources = [
     {
@@ -67,21 +62,6 @@ export default function HomePage() {
           Your marketplace for campus essentials. Buy, sell, and exchange
           resources with ease.
         </p>
-
-        {/* Add Resource Button */}
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 z-50"
-        >
-          Add Resource
-        </button>
-
-        {/* Show form when toggled */}
-        {showForm && (
-          <div className="mt-8">
-            <AddResourceForm />
-          </div>
-        )}
       </section>
 
       {/* Search & Filter UI */}
