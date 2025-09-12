@@ -1,5 +1,5 @@
+// components/Layout.jsx
 "use client";
-
 import { usePathname } from "next/navigation";
 import { useAuth } from '@/contexts/AuthContext';
 import Link from "next/link";
@@ -9,23 +9,45 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 export default function Layout({ children }) {
   const pathname = usePathname();
   const { user, loading, initialized, logout } = useAuth();
-  
+
   // Pages that should not have navbar/footer
   const noLayoutPages = ['/login', '/register', '/error'];
-  
+
   // If it's an auth page, return simple layout
   if (noLayoutPages.includes(pathname)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white text-black">
         {children}
       </div>
     );
   }
 
-  // Full layout for all other pages
+  // Loading state while auth initializes
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white text-black">
+        <nav className="sticky top-0 z-50 bg-white border-b shadow-sm">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              <Link href="/" className="text-xl font-bold tracking-tight text-gray-800">
+                Campus Exchange
+              </Link>
+              <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+            </div>
+          </div>
+        </nav>
+        <main className="flex-1">{children}</main>
+        <footer className="border-t p-4 text-center text-sm text-gray-600">
+          © 2025 Campus Exchange. All rights reserved.
+        </footer>
+      </div>
+    );
+  }
+
+  // Full layout for all other pages - YOUR ORIGINAL DESIGN RESTORED
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
-      {/* Navbar with Auth Context */}
+      {/* Navbar with Auth Context - Your Original Structure */}
       <Disclosure as="nav" className="sticky top-0 z-50 bg-white border-b shadow-sm">
         {({ open }) => (
           <>
@@ -35,7 +57,7 @@ export default function Layout({ children }) {
                 <Link href="/" className="text-xl font-bold tracking-tight text-gray-800">
                   Campus Exchange
                 </Link>
-
+                
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex md:items-center md:space-x-6">
                   <Link href="/" className="text-gray-600 hover:text-black">Home</Link>
@@ -45,10 +67,10 @@ export default function Layout({ children }) {
                   )}
                   <Link href="/contact" className="text-gray-600 hover:text-black">Contact</Link>
                 </div>
-
+                
                 {/* Auth Section - Updated with AuthContext */}
                 <div className="hidden md:flex md:items-center">
-                  {!initialized && loading ? (
+                  {loading ? (
                     <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
                   ) : user ? (
                     // User is logged in - show user info and logout
@@ -84,7 +106,7 @@ export default function Layout({ children }) {
                     </div>
                   )}
                 </div>
-
+                
                 {/* Mobile menu button */}
                 <div className="md:hidden">
                   <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100">
@@ -93,7 +115,7 @@ export default function Layout({ children }) {
                 </div>
               </div>
             </div>
-
+            
             {/* Mobile Navigation Panel */}
             <Disclosure.Panel className="md:hidden border-t bg-white">
               <div className="space-y-1 px-4 pb-4 pt-2">
@@ -108,7 +130,7 @@ export default function Layout({ children }) {
                 {loading ? (
                   <div className="animate-pulse bg-gray-200 h-10 rounded mt-2"></div>
                 ) : user ? (
-                  // ✅ Mobile - User logged in
+                  // Mobile - User logged in
                   <div className="mt-2 space-y-2">
                     <Link
                       href="/profile"
@@ -135,11 +157,11 @@ export default function Layout({ children }) {
           </>
         )}
       </Disclosure>
-
+      
       {/* Main Content */}
       <main className="flex-1">{children}</main>
-
-      {/* Footer */}
+      
+      {/* Footer - RESTORED */}
       <footer className="border-t p-4 text-center text-sm text-gray-600">
         © 2025 Campus Exchange. All rights reserved.
       </footer>

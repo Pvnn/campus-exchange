@@ -108,15 +108,32 @@ async function getDashboardData(userId) {
 }
 
 
+
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, initialized } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
+  // Track component mount
   useEffect(() => {
-    if (user) {
+    setIsMounted(true);
+  }, []);
+
+  // FIXED: Wait for mount AND auth initialization before redirecting
+  useEffect(() => {
+    if (isMounted && initialized && !loading && !user) {
+      console.log('Redirecting to login - no user found');
+      router.replace('/login');
+    }
+  }, [isMounted, initialized, loading, user, router]);
+
+  // FIXED: Wait for auth initialization before loading data
+  useEffect(() => {
+    if (isMounted && initialized && !loading && user) {
+      console.log('Loading dashboard data for user:', user.id);
       setDataLoading(true);
       setError(null);
       
@@ -132,10 +149,10 @@ export default function DashboardPage() {
           setDataLoading(false);
         });
     }
-  }, [user]);
+  }, [isMounted, initialized, loading, user]);
 
-  // Handle authentication loading
-  if (loading) {
+  // Show loading while auth is initializing OR component not mounted
+  if (!isMounted || !initialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div>Loading authentication...</div>
@@ -143,9 +160,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Handle redirect for unauthenticated users
+  // Show redirect message (briefly visible)
   if (!user) {
-    router.push('/login');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div>Redirecting to login...</div>
@@ -153,7 +169,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Handle data loading
+  // Rest of your component remains the same...
   if (dataLoading) {
     return (
       <div className="container mx-auto p-6">
@@ -165,7 +181,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Handle errors
   if (error) {
     return (
       <div className="container mx-auto p-6">
@@ -183,23 +198,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Handle missing data
-  if (!dashboardData) {
-    return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <div>No dashboard data available</div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <DashboardContent 
-        initialData={dashboardData} 
-        user={user}
-      />
+      {dashboardData && (
+        <DashboardContent initialData={dashboardData} user={user} />
+      )}
     </div>
   );
 }
