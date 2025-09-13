@@ -114,25 +114,10 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
-  // Track component mount
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // FIXED: Wait for mount AND auth initialization before redirecting
-  useEffect(() => {
-    if (isMounted && initialized && !loading && !user) {
-      console.log('Redirecting to login - no user found');
-      router.replace('/login');
-    }
-  }, [isMounted, initialized, loading, user, router]);
-
-  // FIXED: Wait for auth initialization before loading data
-  useEffect(() => {
-    if (isMounted && initialized && !loading && user) {
+    if (initialized && !loading && user) {
       console.log('Loading dashboard data for user:', user.id);
       setDataLoading(true);
       setError(null);
@@ -149,10 +134,10 @@ export default function DashboardPage() {
           setDataLoading(false);
         });
     }
-  }, [isMounted, initialized, loading, user]);
+  }, [initialized, loading, user]);
 
-  // Show loading while auth is initializing OR component not mounted
-  if (!isMounted || !initialized || loading) {
+
+  if (!initialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div>Loading authentication...</div>
@@ -160,16 +145,14 @@ export default function DashboardPage() {
     );
   }
 
-  // Show redirect message (briefly visible)
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div>Redirecting to login...</div>
+        <div>Checking authentication...</div>
       </div>
     );
   }
 
-  // Rest of your component remains the same...
   if (dataLoading) {
     return (
       <div className="container mx-auto p-6">

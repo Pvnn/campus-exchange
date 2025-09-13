@@ -1,4 +1,3 @@
-// components/Layout.jsx
 "use client";
 import { usePathname } from "next/navigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,7 +43,7 @@ export default function Layout({ children }) {
     );
   }
 
-  // Full layout for all other pages - YOUR ORIGINAL DESIGN RESTORED
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
       {/* Navbar with Auth Context - Your Original Structure */}
@@ -161,7 +160,7 @@ export default function Layout({ children }) {
       {/* Main Content */}
       <main className="flex-1">{children}</main>
       
-      {/* Footer - RESTORED */}
+      {/* Footer */}
       <footer className="border-t p-4 text-center text-sm text-gray-600">
         © 2025 Campus Exchange. All rights reserved.
       </footer>

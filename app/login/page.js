@@ -48,7 +48,6 @@ export default function LoginPage() {
     setApiError("");
 
     try {
-      // USE SUPABASE DIRECTLY instead of custom API
       const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
@@ -58,7 +57,6 @@ export default function LoginPage() {
         setApiError(error.message || 'Login failed');
       } else if (data.user) {
         console.log('Login successful, user:', data.user.id);
-        // Add small delay to ensure session is set
         setTimeout(() => {
           router.replace('/dashboard');
         }, 100);

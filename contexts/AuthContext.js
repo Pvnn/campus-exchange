@@ -1,4 +1,3 @@
-// contexts/AuthContext.js
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -56,14 +55,12 @@ export function AuthProvider({ children }) {
 
     getInitialSession();
 
-    // Listen for auth changes - DO NOT run DB queries here
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event, session?.user?.id);
         
         if (!isMounted) return;
 
-        // Only update auth state, don't fetch profile here
         setUser(session?.user || null);
         setLoading(false);
         setInitialized(true);
@@ -76,7 +73,7 @@ export function AuthProvider({ children }) {
     };
   }, [supabase]);
 
-  // Separate effect for fetching profile when user changes
+
   useEffect(() => {
     if (!user?.id || !initialized) return;
 
