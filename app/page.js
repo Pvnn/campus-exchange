@@ -56,20 +56,11 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Personalized welcome for logged-in users */}
-      {user && (
-        <section className="bg-gray-50 py-6 text-center">
-          <p className="text-lg text-gray-700">
-            Welcome back, {user.profile?.name || user.email.split("@")[0]}!
-          </p>
-        </section>
-      )}
-
       {/* Hero Section */}
-      <section className="relative h-[500px] flex items-center justify-center text-center">
+      <section className="relative min-h-screen flex items-center justify-center text-center">
         <Image
-          src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1600&q=80"
-          alt="Library books background"
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80"
+          alt="Students studying together"
           fill
           priority
           className="object-cover"
@@ -145,17 +136,24 @@ export default function HomePage() {
       {/* About Section */}
       <section
         id="about"
-        className="bg-gray-50 min-h-screen py-32 px-6 md:px-12 border-t border-gray-200 flex items-center"
+        className="relative min-h-screen py-32 px-6 md:px-12 border-t border-gray-200 flex items-center"
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">About Us</h2>
-          <p className="text-lg text-gray-700 mb-4">
+        <Image
+          src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80"
+          alt="Students collaborating"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
+          <h2 className="text-4xl md:text-5xl font-bold mb-8">About Us</h2>
+          <p className="text-xl md:text-2xl mb-6 leading-relaxed">
             Campus Exchange is a student-to-student marketplace designed to make
             sharing resources easy and convenient. From books to gadgets, notes
             to furniture, we provide a trusted platform for students to buy,
             sell, and exchange within their campus community.
           </p>
-          <p className="text-lg text-gray-700">
+          <p className="text-xl md:text-2xl leading-relaxed">
             Our goal is to promote sustainability, affordability, and
             collaboration, ensuring that every student has access to the tools
             they need to succeed.
