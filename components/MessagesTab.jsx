@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { MessageCircle, Eye, Send } from "lucide-react"
-export default function MessagesTab({ messages }) {
+export default function MessagesTab({ messages, user }) {
   const messageEntries = Object.entries(messages)
   const [selectedTransaction, setSelectedTransaction] = useState(messageEntries[0]?.[0] || null)
   const [newMessage, setNewMessage] = useState("")
+  const currentUserId = user?.id;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
@@ -26,12 +27,8 @@ export default function MessagesTab({ messages }) {
               const hasPendingRequest = transactionMessages.some(
                 (msg) => msg.type === "request" && msg.status === "pending",
               )
-              const resourceName =
-                transactionMessages[0]?.resource_name ||
-                transactionMessages.find((msg) => msg.resource_name)?.resource_name ||
-                "Operating Systems Concepts" // fallback for test data
-              const senderName =
-                transactionMessages.find((msg) => msg.sender?.name !== "Pavan Raj")?.sender?.name || "Tester1"
+              const resourceName = transactionMessages[0]?.transaction?.resource?.title || "Unknown Resource";
+              const senderName = transactionMessages.find((msg) => msg.sender?.id !== currentUserId)?.sender?.name || "Unknown";
 
               return (
                 <button
@@ -107,7 +104,7 @@ export default function MessagesTab({ messages }) {
             {/* Messages */}
             <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
               {messages[selectedTransaction]?.map((message, index) => {
-                const isCurrentUser = message.sender?.name === "Pavan Raj" || message.sender?.id === "current-user"
+                const isCurrentUser = message.sender?.id === currentUserId;
 
                 return (
                   <div key={message.id}>

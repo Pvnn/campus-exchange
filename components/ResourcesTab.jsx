@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 
-export default function ResourcesTab({ resources }) {
+export default function ResourcesTab({ user, resources }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">

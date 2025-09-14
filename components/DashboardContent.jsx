@@ -123,7 +123,7 @@ export default function DashboardContent({ initialData, user }) {
           </TabsContent>
 
           <TabsContent value="resources">
-            <ResourcesTab resources={initialData?.resources || []} />
+            <ResourcesTab user={user} resources={initialData?.resources || []} />
           </TabsContent>
 
           <TabsContent value="transactions">
@@ -134,7 +134,7 @@ export default function DashboardContent({ initialData, user }) {
           </TabsContent>
 
           <TabsContent value="messages">
-            <MessagesTab messages={initialData?.messagesByTransaction || {}} />
+            <MessagesTab user={user} messages={initialData?.messagesByTransaction || {}} />
           </TabsContent>
         </Tabs>
       </div>

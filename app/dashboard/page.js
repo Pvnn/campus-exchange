@@ -6,9 +6,9 @@ import DashboardContent from '@/components/DashboardContent'
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from "react";
 
-async function getDashboardData(userId) {
+export async function getDashboardData(userId) {
   const supabase = createClient();
-  
+
   try {
     const [
       resourcesCountResult,
@@ -19,33 +19,33 @@ async function getDashboardData(userId) {
       othersInitiatedTxsResult,
       messagesResult
     ] = await Promise.all([
-      // Count queries
+      // Count of user's own resources
       supabase
         .from('resources')
         .select('*', { count: 'exact', head: true })
         .eq('owner_id', userId),
-      
-      // Count user initiated transactions
+
+      // Count of transactions user initiated
       supabase
         .from('transactions')
         .select('*', { count: 'exact', head: true })
         .eq('requester_id', userId),
-      
-      // Count transactions on user's resources initiated by others
+
+      // Count of transactions on user's resources initiated by others
       supabase
         .from('transactions')
         .select('*, resources!inner(owner_id)', { count: 'exact', head: true })
         .eq('resources.owner_id', userId)
         .neq('requester_id', userId),
 
-      // Data queries
+      // Full data for user's resources
       supabase
         .from('resources')
         .select('*, categories(name)')
         .eq('owner_id', userId)
         .order('created_at', { ascending: false }),
 
-      // User initiated transactions
+      // Transactions user initiated
       supabase
         .from('transactions')
         .select('*, resources(title), initiator:users!requester_id(name), other_party:users!owner_id(name)')
@@ -60,15 +60,31 @@ async function getDashboardData(userId) {
         .neq('requester_id', userId)
         .order('created_at', { ascending: false }),
 
-      // Messages where user is sender OR receiver, grouped by transaction for chat
+      // 💬 Messages enriched with transaction + resource + participants
       supabase
         .from('messages')
-        .select('*, sender:users!sender_id(name), receiver:users!receiver_id(name), transactions(id)')
+        .select(`
+          id,
+          content,
+          created_at,
+          transaction_id,
+          sender:users!sender_id(id, name),
+          receiver:users!receiver_id(id, name),
+          transaction:transactions (
+            id,
+            requester:users!requester_id(id, name),
+            owner:users!owner_id(id, name),
+            resource:resources (
+              id,
+              title
+            )
+          )
+        `)
         .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
         .order('transaction_id, created_at', { ascending: true })
     ]);
 
-    // Check for errors
+    // Handle errors
     if (resourcesCountResult.error) throw resourcesCountResult.error;
     if (userInitiatedTxsCountResult.error) throw userInitiatedTxsCountResult.error;
     if (othersInitiatedTxsCountResult.error) throw othersInitiatedTxsCountResult.error;
@@ -77,9 +93,9 @@ async function getDashboardData(userId) {
     if (othersInitiatedTxsResult.error) throw othersInitiatedTxsResult.error;
     if (messagesResult.error) throw messagesResult.error;
 
-    // Group messages by transaction_id for chat display
+    // Group messages by transaction_id for the MessagesTab
     const messagesByTransaction = {};
-    (messagesResult.data || []).forEach(message => {
+    (messagesResult.data || []).forEach((message) => {
       const txId = message.transaction_id;
       if (!messagesByTransaction[txId]) {
         messagesByTransaction[txId] = [];
@@ -92,21 +108,22 @@ async function getDashboardData(userId) {
         resourcesCount: resourcesCountResult.count || 0,
         userInitiatedTransactions: userInitiatedTxsCountResult.count || 0,
         othersInitiatedTransactions: othersInitiatedTxsCountResult.count || 0,
-        totalActiveTransactions: (userInitiatedTxsCountResult.count || 0) + (othersInitiatedTxsCountResult.count || 0),
+        totalActiveTransactions:
+          (userInitiatedTxsCountResult.count || 0) + (othersInitiatedTxsCountResult.count || 0),
         unreadMessages: messagesResult.count || 0
       },
       resources: resourcesResult.data || [],
       userInitiatedTransactions: userInitiatedTxsResult.data || [],
       othersInitiatedTransactions: othersInitiatedTxsResult.data || [],
       messages: messagesResult.data || [],
-      messagesByTransaction: messagesByTransaction
+      messagesByTransaction
     };
+
   } catch (error) {
     console.error('Dashboard data fetch error:', error);
     throw error;
   }
 }
-
 
 
 export default function DashboardPage() {
