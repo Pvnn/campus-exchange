@@ -7,13 +7,13 @@ const ErrorMessage = ({ message }) => (
   <p className="text-red-500 text-sm mt-1">{message}</p>
 );
 
-// Validation helper
 const validateResource = (data) => {
   const errors = {};
   if (!data.title.trim()) errors.title = "Title is required";
   if (!data.description.trim()) errors.description = "Description is required";
   if (!data.category) errors.category = "Category is required";
-  if (!data.price || Number(data.price) <= 0) errors.price = "Price must be positive";
+  if (!data.price || Number(data.price) <= 0)
+    errors.price = "Price must be positive";
   if (!data.type) errors.type = "Type is required";
   return errors;
 };
@@ -29,7 +29,6 @@ export default function AddResourceForm() {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const categories = ["Books", "Electronics", "Furniture", "Clothing"];
   const types = ["Sell", "Lend", "Share"];
@@ -51,10 +50,14 @@ export default function AddResourceForm() {
     setTimeout(() => {
       console.log("Resource ready for API:", formData);
       setLoading(false);
-      setFormData({ title: "", description: "", category: "", price: "", type: "" });
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        price: "",
+        type: "",
+      });
       setIsModalOpen(false);
-      setSuccessMessage("Resource added successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
     }, 1000);
   };
 
@@ -68,16 +71,9 @@ export default function AddResourceForm() {
         Add Resource
       </button>
 
-      {/* Success message */}
-      {successMessage && (
-        <div className="fixed bottom-24 right-6 bg-green-200 text-green-800 px-4 py-2 rounded shadow-lg z-50">
-          {successMessage}
-        </div>
-      )}
-
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg relative p-6">
             <button
               onClick={() => setIsModalOpen(false)}
@@ -85,7 +81,9 @@ export default function AddResourceForm() {
             >
               ✕
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-center">Add New Resource</h2>
+            <h2 className="text-2xl font-bold mb-4 text-center">
+              Add New Resource
+            </h2>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               {/* Title */}
@@ -110,7 +108,9 @@ export default function AddResourceForm() {
                   onChange={handleChange}
                   className="w-full mt-1 p-2 border rounded"
                 />
-                {errors.description && <ErrorMessage message={errors.description} />}
+                {errors.description && (
+                  <ErrorMessage message={errors.description} />
+                )}
               </div>
 
               {/* Category */}
@@ -124,7 +124,9 @@ export default function AddResourceForm() {
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
                 {errors.category && <ErrorMessage message={errors.category} />}
@@ -154,7 +156,9 @@ export default function AddResourceForm() {
                 >
                   <option value="">Select Type</option>
                   {types.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
                 {errors.type && <ErrorMessage message={errors.type} />}
@@ -163,7 +167,9 @@ export default function AddResourceForm() {
               <button
                 type="submit"
                 className={`w-full p-2 rounded text-white font-semibold ${
-                  loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+                  loading
+                    ? "bg-gray-400"
+                    : "bg-blue-500 hover:bg-blue-600 transition"
                 }`}
                 disabled={loading}
               >
