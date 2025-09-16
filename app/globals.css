@@ -47,6 +47,11 @@ body {
   background: #fff;
 }
 
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
 ::placeholder {
   color: #1f2937; /* Tailwind gray-800 */
   opacity: 1;

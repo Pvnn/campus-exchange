@@ -62,8 +62,8 @@ export default function LoginPage() {
         }, 100);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setApiError('Network error. Please try again.');
+      console.error("Login error:", error);
+      setApiError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
