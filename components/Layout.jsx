@@ -14,25 +14,30 @@ export default function Layout({ children }) {
   // Pages that should not have navbar/footer
   const noLayoutPages = ['/login', '/register', '/error'];
   // Scroll to section if element exists
-  const handleScroll = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Layout.jsx  ── inside the component scope
+  const navigateToSection = (id) => {
+    // if we’re already on the home page just scroll
+    if (pathname === "/") {
+      return scrollToId(id);
+    }
+
+    // otherwise go to "/", then scroll after a short delay
+    router.push("/");     // <-- no .then()
+
+    // give React 1-2 frames to mount the new DOM
+    setTimeout(() => scrollToId(id), 200);
+  };
+
+  // tiny helper so we don’t repeat code
+  const scrollToId = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  // Navigate to homepage first if not on "/" then scroll
-  const navigateToSection = (id) => {
-    if (pathname !== "/") {
-      router.push("/").then(() => {
-        setTimeout(() => handleScroll(id), 100);
-      });
-    } else {
-      handleScroll(id);
-    }
-  };
 
   // ----- Proper logout handler -----
   const handleLogout = async () => {
