@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from '@/utils/supabase/client';
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { setUser } = useAuth();
   const supabase = createClient();
 
   const validate = () => {
@@ -41,41 +39,27 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       return setErrors(validationErrors);
     }
+
     setLoading(true);
     setApiError("");
+
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("name, email")
-            .eq("id", data.user.id)
-            .single();
-
-          setUser({ ...data.user, profile });
-        }
-        router.push("/");
-      } else {
-        setApiError(data.error || "Invalid credentials");
+      if (error) {
+        setApiError(error.message || 'Login failed');
+      } else if (data.user) {
+        console.log('Login successful, user:', data.user.id);
+        setTimeout(() => {
+          router.replace('/dashboard');
+        }, 100);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -84,6 +68,8 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

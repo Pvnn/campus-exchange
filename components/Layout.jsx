@@ -10,37 +10,34 @@ export default function Layout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, initialized, logout } = useAuth();
-  
+
+  // Pages that should not have navbar/footer
   const noLayoutPages = ['/login', '/register', '/error'];
-
-  if (noLayoutPages.includes(pathname)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        {children}
-      </div>
-    );
-  }
-
   // Scroll to section if element exists
-  const handleScroll = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Layout.jsx  ── inside the component scope
+  const navigateToSection = (id) => {
+    // if we’re already on the home page just scroll
+    if (pathname === "/") {
+      return scrollToId(id);
+    }
+
+    // otherwise go to "/", then scroll after a short delay
+    router.push("/");     // <-- no .then()
+
+    // give React 1-2 frames to mount the new DOM
+    setTimeout(() => scrollToId(id), 200);
+  };
+
+  // tiny helper so we don’t repeat code
+  const scrollToId = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  // Navigate to homepage first if not on "/" then scroll
-  const navigateToSection = (id) => {
-    if (pathname !== "/") {
-      router.push("/").then(() => {
-        setTimeout(() => handleScroll(id), 100);
-      });
-    } else {
-      handleScroll(id);
-    }
-  };
 
   // ----- Proper logout handler -----
   const handleLogout = async () => {
@@ -52,6 +49,38 @@ export default function Layout({ children }) {
       router.replace("/"); // always go back to logged-out homepage
     }
   };
+
+  // If it's an auth page, return simple layout
+  if (noLayoutPages.includes(pathname)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-black">
+        {children}
+      </div>
+    );
+  }
+
+  // Loading state while auth initializes
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white text-black">
+        <nav className="sticky top-0 z-50 bg-white border-b shadow-sm">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              <Link href="/" className="text-xl font-bold tracking-tight text-gray-800">
+                Campus Exchange
+              </Link>
+              <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+            </div>
+          </div>
+        </nav>
+        <main className="flex-1">{children}</main>
+        <footer className="border-t p-4 text-center text-sm text-gray-600">
+          © 2025 Campus Exchange. All rights reserved.
+        </footer>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
@@ -78,7 +107,7 @@ export default function Layout({ children }) {
 
                 {/* Auth Section */}
                 <div className="hidden md:flex md:items-center">
-                  {!initialized && loading ? (
+                  {loading ? (
                     <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
                   ) : user ? (
                     <div className="flex items-center space-x-4">
@@ -112,7 +141,7 @@ export default function Layout({ children }) {
                     </div>
                   )}
                 </div>
-
+                
                 {/* Mobile menu button */}
                 <div className="md:hidden">
                   <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100">
@@ -121,7 +150,7 @@ export default function Layout({ children }) {
                 </div>
               </div>
             </div>
-
+            
             {/* Mobile Navigation Panel */}
             <Disclosure.Panel className="md:hidden border-t bg-white">
               <div className="space-y-1 px-4 pb-4 pt-2">
@@ -161,10 +190,10 @@ export default function Layout({ children }) {
           </>
         )}
       </Disclosure>
-
+      
       {/* Main Content */}
       <main className="flex-1">{children}</main>
-
+      
       {/* Footer */}
       <footer className="border-t p-4 text-center text-sm text-gray-600">
         © 2025 Campus Exchange. All rights reserved.

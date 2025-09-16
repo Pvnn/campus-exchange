@@ -1,49 +1,208 @@
-export default function Dashboard() {
-  return (
-    <div className="max-w-5xl mx-auto py-16 px-6">
-      <h1 className="text-3xl font-bold mb-10">Dashboard</h1>
+"use client";
 
-      {/* Dashboard Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {/* Browse Resources */}
-        <a
-          href="/browse"
-          className="block p-6 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-semibold text-gray-800">
-            Browse Resources
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Explore resources shared by other students.
-          </p>
-        </a>
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import DashboardContent from '@/components/DashboardContent'
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from "react";
 
-        {/* Resource Reviews */}
-        <a
-          href="/review"
-          className="block p-6 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-semibold text-gray-800">
-            Resource Reviews
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Check your messages and stay connected.
-          </p>
-        </a>
+export async function getDashboardData(userId) {
+  const supabase = createClient();
 
-        {/*Update Profile */}
-        <a
-          href="/profile"
-          className="block p-6 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-semibold text-gray-800">
-            Update Profile
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Update your details and manage your account.
-          </p>
-        </a>
+  try {
+    const [
+      resourcesCountResult,
+      userInitiatedTxsCountResult,
+      othersInitiatedTxsCountResult,
+      resourcesResult,
+      userInitiatedTxsResult,
+      othersInitiatedTxsResult,
+      messagesResult
+    ] = await Promise.all([
+      // Count of user's own resources
+      supabase
+        .from('resources')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', userId),
+
+      // Count of transactions user initiated
+      supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('requester_id', userId),
+
+      // Count of transactions on user's resources initiated by others
+      supabase
+        .from('transactions')
+        .select('*, resources!inner(owner_id)', { count: 'exact', head: true })
+        .eq('resources.owner_id', userId)
+        .neq('requester_id', userId),
+
+      // Full data for user's resources
+      supabase
+        .from('resources')
+        .select('*, categories(name)')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false }),
+
+      // Transactions user initiated
+      supabase
+        .from('transactions')
+        .select('*, resources(title), initiator:users!requester_id(name), other_party:users!owner_id(name)')
+        .eq('requester_id', userId)
+        .order('created_at', { ascending: false }),
+
+      // Transactions on user's resources initiated by others
+      supabase
+        .from('transactions')
+        .select('*, resources!inner(title), initiator:users!requester_id(name)')
+        .eq('resources.owner_id', userId)
+        .neq('requester_id', userId)
+        .order('created_at', { ascending: false }),
+
+      // 💬 Messages enriched with transaction + resource + participants
+      supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          transaction_id,
+          sender:users!sender_id(id, name),
+          receiver:users!receiver_id(id, name),
+          transaction:transactions (
+            id,
+            requester:users!requester_id(id, name),
+            owner:users!owner_id(id, name),
+            resource:resources (
+              id,
+              title
+            )
+          )
+        `)
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .order('transaction_id, created_at', { ascending: true })
+    ]);
+
+    // Handle errors
+    if (resourcesCountResult.error) throw resourcesCountResult.error;
+    if (userInitiatedTxsCountResult.error) throw userInitiatedTxsCountResult.error;
+    if (othersInitiatedTxsCountResult.error) throw othersInitiatedTxsCountResult.error;
+    if (resourcesResult.error) throw resourcesResult.error;
+    if (userInitiatedTxsResult.error) throw userInitiatedTxsResult.error;
+    if (othersInitiatedTxsResult.error) throw othersInitiatedTxsResult.error;
+    if (messagesResult.error) throw messagesResult.error;
+
+    // Group messages by transaction_id for the MessagesTab
+    const messagesByTransaction = {};
+    (messagesResult.data || []).forEach((message) => {
+      const txId = message.transaction_id;
+      if (!messagesByTransaction[txId]) {
+        messagesByTransaction[txId] = [];
+      }
+      messagesByTransaction[txId].push(message);
+    });
+
+    return {
+      stats: {
+        resourcesCount: resourcesCountResult.count || 0,
+        userInitiatedTransactions: userInitiatedTxsCountResult.count || 0,
+        othersInitiatedTransactions: othersInitiatedTxsCountResult.count || 0,
+        totalActiveTransactions:
+          (userInitiatedTxsCountResult.count || 0) + (othersInitiatedTxsCountResult.count || 0),
+        unreadMessages: messagesResult.count || 0
+      },
+      resources: resourcesResult.data || [],
+      userInitiatedTransactions: userInitiatedTxsResult.data || [],
+      othersInitiatedTransactions: othersInitiatedTxsResult.data || [],
+      messages: messagesResult.data || [],
+      messagesByTransaction
+    };
+
+  } catch (error) {
+    console.error('Dashboard data fetch error:', error);
+    throw error;
+  }
+}
+
+
+export default function DashboardPage() {
+  const { user, loading, initialized } = useAuth();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (initialized && !loading && user) {
+      console.log('Loading dashboard data for user:', user.id);
+      setDataLoading(true);
+      setError(null);
+      
+      getDashboardData(user.id)
+        .then(data => {
+          setDashboardData(data);
+        })
+        .catch(err => {
+          console.error('Failed to load dashboard data:', err);
+          setError(err.message || 'Failed to load dashboard data');
+        })
+        .finally(() => {
+          setDataLoading(false);
+        });
+    }
+  }, [initialized, loading, user]);
+
+
+  if (!initialized || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading authentication...</div>
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Checking authentication...</div>
+      </div>
+    );
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        <div className="flex items-center justify-center h-64">
+          <div>Loading dashboard data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <p>Error loading dashboard: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      {dashboardData && (
+        <DashboardContent initialData={dashboardData} user={user} />
+      )}
     </div>
   );
 }

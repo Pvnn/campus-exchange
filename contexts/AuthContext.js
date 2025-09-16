@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
-const AuthContext = createContext({});
+const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -17,71 +17,83 @@ export const useAuth = () => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-  const router = useRouter();
   const [initialized, setInitialized] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // Fetch profile data
-        const { data: profile } = await supabase
-          .from('users')
-          .select('name, email')
-          .eq('id', session.user.id)
-          .single();
+    let isMounted = true;
+
+    async function getInitialSession() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        setUser({ ...session.user, profile });
-      } else {
-        setUser(null);
+        if (!isMounted) return;
+
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('users')
+            .select('name, email')
+            .eq('id', session.user.id)
+            .single();
+
+          setUser({ ...session.user, profile });
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
-      setLoading(false);
-      setInitialized(true);
-    };
+    }
 
     getInitialSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event);
-        if(event=='TOKEN_REFRESHED' && initialized){
-          if (session?.user) {
-            // Fetch fresh profile data
-            const { data: profile } = await supabase
-              .from('users')
-              .select('name, email')
-              .eq('id', session.user.id)
-              .single();
-            
-            setUser({ ...session.user, profile });
-          }
-          return;
-        }
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-        } else if (session?.user) {
-            const { data: profile } = await supabase
-                .from('users')
-                .select('name, email')
-                .eq('id', session.user.id)
-                .single();
-            setUser({ ...session.user, profile });
-        }
+        console.log('Auth event:', event, session?.user?.id);
+        
+        if (!isMounted) return;
+
+        setUser(session?.user || null);
         setLoading(false);
         setInitialized(true);
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [initialized]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+
+  useEffect(() => {
+    if (!user?.id || !initialized) return;
+
+    async function fetchProfile() {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setUser(prevUser => ({ ...prevUser, profile }));
+      }
+    }
+
+    fetchProfile();
+  }, [user?.id, initialized, supabase]);
 
   const logout = async () => {
     await supabase.auth.signOut();
-    console.log('Logging out...');
     setUser(null);
     router.push('/');
   };
@@ -91,7 +103,6 @@ export function AuthProvider({ children }) {
     loading,
     initialized,
     logout,
-    setUser,
   };
 
   return (
