@@ -60,7 +60,7 @@ export async function getDashboardData(userId) {
         .neq('requester_id', userId)
         .order('created_at', { ascending: false }),
 
-      // 💬 Messages enriched with transaction + resource + participants
+      //Messages enriched with transaction + resource + participants
       supabase
         .from('messages')
         .select(`

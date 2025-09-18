@@ -1,11 +1,21 @@
+"use client"
 import { Button } from "@/components/ui/button"
+import AddResourceForm from "./AddResourceForm"
+import { useState } from "react";
 
-export default function ResourcesTab({ user, resources }) {
+export default function ResourcesTab({ user, resources: initialResources }) {
+  const [resources, setResources] = useState(initialResources || []);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log(resources);
+
+  const handleResourceAdded = (newResource) => {
+    setResources(prevResources => [newResource, ...prevResources]);
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Your Resources ({resources.length})</h2>
-        <Button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+        <Button onClick={() => setIsModalOpen(true)} className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
           Add New Resource
         </Button>
       </div>
@@ -59,6 +69,12 @@ export default function ResourcesTab({ user, resources }) {
           </div>
         )}
       </div>
+      <AddResourceForm
+        user={user}
+        onResourceAdded={handleResourceAdded}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+      />
     </div>
   )
 }
