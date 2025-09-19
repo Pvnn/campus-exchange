@@ -1,165 +1,46 @@
-"use client";
+"use client"
 
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
-import DashboardContent from '@/components/DashboardContent'
-import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from "react";
-
-export async function getDashboardData(userId) {
-  const supabase = createClient();
-
-  try {
-    const [
-      resourcesCountResult,
-      userInitiatedTxsCountResult,
-      othersInitiatedTxsCountResult,
-      resourcesResult,
-      userInitiatedTxsResult,
-      othersInitiatedTxsResult,
-      messagesResult
-    ] = await Promise.all([
-      // Count of user's own resources
-      supabase
-        .from('resources')
-        .select('*', { count: 'exact', head: true })
-        .eq('owner_id', userId),
-
-      // Count of transactions user initiated
-      supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true })
-        .eq('requester_id', userId),
-
-      // Count of transactions on user's resources initiated by others
-      supabase
-        .from('transactions')
-        .select('*, resources!inner(owner_id)', { count: 'exact', head: true })
-        .eq('resources.owner_id', userId)
-        .neq('requester_id', userId),
-
-      // Full data for user's resources
-      supabase
-        .from('resources')
-        .select('*, categories(name)')
-        .eq('owner_id', userId)
-        .order('created_at', { ascending: false }),
-
-      // Transactions user initiated
-      supabase
-        .from('transactions')
-        .select('*, resources(title), initiator:users!requester_id(name), other_party:users!owner_id(name)')
-        .eq('requester_id', userId)
-        .order('created_at', { ascending: false }),
-
-      // Transactions on user's resources initiated by others
-      supabase
-        .from('transactions')
-        .select('*, resources!inner(title), initiator:users!requester_id(name)')
-        .eq('resources.owner_id', userId)
-        .neq('requester_id', userId)
-        .order('created_at', { ascending: false }),
-
-      //Messages enriched with transaction + resource + participants
-      supabase
-        .from('messages')
-        .select(`
-          id,
-          content,
-          created_at,
-          transaction_id,
-          sender:users!sender_id(id, name),
-          receiver:users!receiver_id(id, name),
-          transaction:transactions (
-            id,
-            requester:users!requester_id(id, name),
-            owner:users!owner_id(id, name),
-            resource:resources (
-              id,
-              title
-            )
-          )
-        `)
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-        .order('transaction_id, created_at', { ascending: true })
-    ]);
-
-    // Handle errors
-    if (resourcesCountResult.error) throw resourcesCountResult.error;
-    if (userInitiatedTxsCountResult.error) throw userInitiatedTxsCountResult.error;
-    if (othersInitiatedTxsCountResult.error) throw othersInitiatedTxsCountResult.error;
-    if (resourcesResult.error) throw resourcesResult.error;
-    if (userInitiatedTxsResult.error) throw userInitiatedTxsResult.error;
-    if (othersInitiatedTxsResult.error) throw othersInitiatedTxsResult.error;
-    if (messagesResult.error) throw messagesResult.error;
-
-    // Group messages by transaction_id for the MessagesTab
-    const messagesByTransaction = {};
-    (messagesResult.data || []).forEach((message) => {
-      const txId = message.transaction_id;
-      if (!messagesByTransaction[txId]) {
-        messagesByTransaction[txId] = [];
-      }
-      messagesByTransaction[txId].push(message);
-    });
-
-    return {
-      stats: {
-        resourcesCount: resourcesCountResult.count || 0,
-        userInitiatedTransactions: userInitiatedTxsCountResult.count || 0,
-        othersInitiatedTransactions: othersInitiatedTxsCountResult.count || 0,
-        totalActiveTransactions:
-          (userInitiatedTxsCountResult.count || 0) + (othersInitiatedTxsCountResult.count || 0),
-        unreadMessages: messagesResult.count || 0
-      },
-      resources: resourcesResult.data || [],
-      userInitiatedTransactions: userInitiatedTxsResult.data || [],
-      othersInitiatedTransactions: othersInitiatedTxsResult.data || [],
-      messages: messagesResult.data || [],
-      messagesByTransaction
-    };
-
-  } catch (error) {
-    console.error('Dashboard data fetch error:', error);
-    throw error;
-  }
-}
-
+import { useAuth } from "@/contexts/AuthContext"
+import { useEffect, useState } from "react"
+import { getDashboardData } from "@/lib/dashboard-data"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { MessageCircle, Package, TrendingUp, Users, Plus, Search } from "lucide-react"
+import Link from "next/link"
+import OverviewTab from "@/components/OverviewTab"
 
 export default function DashboardPage() {
-  const { user, loading, initialized } = useAuth();
-  const [dashboardData, setDashboardData] = useState(null);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const router = useRouter();
+  const { user, loading, initialized } = useAuth()
+  const [dashboardData, setDashboardData] = useState(null)
+  const [dataLoading, setDataLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (initialized && !loading && user) {
-      console.log('Loading dashboard data for user:', user.id);
-      setDataLoading(true);
-      setError(null);
-      
+      console.log("Loading dashboard data for user:", user.id)
+      setDataLoading(true)
+      setError(null)
+
       getDashboardData(user.id)
-        .then(data => {
-          setDashboardData(data);
+        .then((data) => {
+          setDashboardData(data)
         })
-        .catch(err => {
-          console.error('Failed to load dashboard data:', err);
-          setError(err.message || 'Failed to load dashboard data');
+        .catch((err) => {
+          console.error("Failed to load dashboard data:", err)
+          setError(err.message || "Failed to load dashboard data")
         })
         .finally(() => {
-          setDataLoading(false);
-        });
+          setDataLoading(false)
+        })
     }
-  }, [initialized, loading, user]);
-
+  }, [initialized, loading, user])
 
   if (!initialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div>Loading authentication...</div>
       </div>
-    );
+    )
   }
 
   if (!user) {
@@ -167,42 +48,130 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div>Checking authentication...</div>
       </div>
-    );
+    )
   }
 
   if (dataLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <div className="flex items-center justify-center h-64">
-          <div>Loading dashboard data...</div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div>Loading dashboard data...</div>
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p>Error loading dashboard: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <p>Error loading dashboard: {error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Retry
+        </button>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {dashboardData && (
-        <DashboardContent initialData={dashboardData} user={user} />
-      )}
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 text-balance">
+            Welcome back, {user?.profile?.name || user?.email?.split("@")[0]}!
+          </h1>
+          <p className="text-lg text-gray-700 text-pretty">
+            Here's what's happening with your Campus Exchange account today.
+          </p>
+        </div>
+        <div className="hidden md:flex items-center space-x-3">
+          <Button size="sm" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent">
+            <Search className="w-4 h-4 mr-2" />
+            Browse Resources
+          </Button>
+          <Link href="/dashboard/resources">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Resource
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link href="/dashboard/resources">
+          <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Your Resources</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.resourcesCount || 0}</p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl">
+                  <Package className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/dashboard/transactions">
+          <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Active Deals</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {dashboardData?.stats?.totalActiveTransactions || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/dashboard/messages">
+          <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Messages</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.unreadMessages || 0}</p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl">
+                  <MessageCircle className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/dashboard/transactions">
+          <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">New Requests</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {dashboardData?.stats?.othersInitiatedTransactions || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl">
+                  <Users className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Overview Content */}
+      {dashboardData && <OverviewTab initialData={dashboardData} />}
     </div>
-  );
+  )
 }
