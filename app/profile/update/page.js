@@ -1,12 +1,15 @@
+// app/profile/update/page.js
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { getProfile, updateProfile } from "@/lib/profileService";
 
 export default function UpdateProfilePage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,109 +17,133 @@ export default function UpdateProfilePage() {
     bio: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
+  // Load profile from Supabase
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
+    if (user) {
+      getProfile(user.id).then((profile) => {
+        if (profile) {
+          setFormData({
+            name: profile.name || "",
+            email: user.email || "", // from auth user
+            phone: profile.phone || "",
+            bio: profile.bio || "",
+          });
+        }
+        setLoading(false);
+      });
     }
-    // Prefill form
-    setFormData({
-      name: user.profile?.name || "",
-      email: user.email || "",
-      phone: user.profile?.phone || "",
-      bio: user.profile?.bio || "",
-    });
-  }, [user, router]);
+  }, [user]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // 🔹 Replace with real API call
-    console.log("Updated profile data:", formData);
-
-    alert("Profile updated successfully!");
+    if (!user) return;
 
     try {
-      await Promise.resolve(logout());
+      await updateProfile(user.id, {
+        // don’t allow updating name
+        phone: formData.phone,
+        bio: formData.bio,
+        email: formData.email, // allow updating email
+      });
+      router.push("/profile");
     } catch (err) {
-      console.error("Logout failed after update:", err);
-    } finally {
-      router.replace("/"); // go to logged-out home
+      alert("Failed to update profile: " + err.message);
     }
   };
 
-  if (!user) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6">
-      <h1 className="text-3xl font-bold mb-8">Update Profile</h1>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="bg-white shadow-lg rounded-xl p-8 max-w-lg w-full">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Update Profile
+        </h1>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        {/* Name */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Name</label>
-          <input
-            type="text"
-            name="name"
-            className="w-full p-3 border rounded-lg"
-            placeholder="Enter your name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name (Read-only) */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="w-full p-3 border rounded-lg"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
+          {/* Email (Editable) */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
 
-        {/* Phone */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Phone</label>
-          <input
-            type="text"
-            name="phone"
-            className="w-full p-3 border rounded-lg"
-            placeholder="Enter your phone number"
-            value={formData.phone}
-            onChange={handleChange}
-          />
-        </div>
+          {/* Phone */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Phone
+            </label>
+            <input
+              type="text"
+              name="phone"
+              placeholder="Enter your phone number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
 
-        {/* Bio */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Bio</label>
-          <textarea
-            name="bio"
-            className="w-full p-3 border rounded-lg"
-            rows="4"
-            placeholder="Write something about yourself..."
-            value={formData.bio}
-            onChange={handleChange}
-          />
-        </div>
+          {/* Bio */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Bio</label>
+            <textarea
+              name="bio"
+              placeholder="Write something about yourself..."
+              value={formData.bio}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              rows="4"
+            />
+          </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
-          Save Changes
-        </button>
-      </form>
+          {/* Save Button */}
+          <div className="text-center">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-blue-700 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
