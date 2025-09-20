@@ -4,11 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { Loader2, Eye, CalendarClock, User, Package, IndianRupee, Tag } from "lucide-react";
-
+import ViewEditResourceModal from "./ViewEditResourceModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 export default function TransactionDetailsModal({ open, onOpenChange, transactionId }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [tx, setTx] = useState(null);
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
   // FETCH transaction details when opened
   useEffect(() => {
@@ -69,6 +74,30 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
 
     fetchTx();
   }, [open, transactionId]);
+
+  useEffect(() => {
+    if (!open) {
+      setResourceModalOpen(false);
+    }
+  }, [open]);
+
+  const handleViewResource = async () => {
+    if (!tx?.resource?.id || !user?.id) return;
+    
+    // Check ownership directly from transaction data
+    const isOwner = tx.resource.owner_id === user?.id;
+    
+    if (isOwner) {
+      onOpenChange(false);
+      setTimeout(() => {
+        setResourceModalOpen(true);
+      }, 150);
+    } else {
+      // Close modal and redirect immediately
+      onOpenChange(false);
+      router.push(`/resources/${tx.resource.id}`);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,10 +172,7 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
                   <a
                     role="button"
                     className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-                    onClick={() => {
-                      // placeholder for opening view resource modal later
-                      console.log("Open Resource Modal:", tx.resource?.id);
-                    }}
+                    onClick={handleViewResource}
                   >
                     View resource
                   </a>
@@ -201,6 +227,15 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
           </Button>
         </DialogFooter>
       </DialogContent>
+      <ViewEditResourceModal
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+        resourceId={tx?.resource?.id}
+        currentUserId={user?.id}
+        onResourceUpdated={(updatedResource) => {
+          setTx(prev => ({ ...prev, resource: updatedResource }));
+        }}
+      />
     </Dialog>
   );
 }

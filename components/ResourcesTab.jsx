@@ -2,11 +2,13 @@
 import { Button } from "@/components/ui/button"
 import AddResourceForm from "./AddResourceForm"
 import { useState } from "react"
+import ViewEditResourceModal from "./ViewEditResourceModal"
 
 export default function ResourcesTab({ user, resources: initialResources }) {
   const [resources, setResources] = useState(initialResources || [])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  console.log(resources)
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState(null);
 
   const handleResourceAdded = (newResource) => {
     setResources((prevResources) => [newResource, ...prevResources])
@@ -46,6 +48,10 @@ export default function ResourcesTab({ user, resources: initialResources }) {
                 <Button
                   size="sm"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-1 rounded-md transition-colors"
+                  onClick={() => {
+                    setSelectedResourceId(resource.id);
+                    setResourceModalOpen(true);
+                  }}
                 >
                   Edit
                 </Button>
@@ -77,6 +83,17 @@ export default function ResourcesTab({ user, resources: initialResources }) {
         onResourceAdded={handleResourceAdded}
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
+      />
+      <ViewEditResourceModal
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+        resourceId={selectedResourceId}
+        currentUserId={user?.id}
+        onResourceUpdated={(updatedResource) => {
+          setResources(prev => 
+            prev.map(r => r.id === updatedResource.id ? updatedResource : r)
+          );
+        }}
       />
     </div>
   )
