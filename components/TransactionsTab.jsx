@@ -3,11 +3,14 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
+import TransactionDetailsModal from "@/components/TransactionDetailsModal";
 export default function TransactionsTab({ userInitiated, othersInitiated }) {
   const supabase = createClient();
   const [ownTx, setOwnTx] = useState(userInitiated || []);
   const [incomingTx, setIncomingTx] = useState(othersInitiated || []);
   const [busyId, setBusyId] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState(null);
   const updateTransactionStatus = async (txId, nextStatus, listSetter) => {
     try {
       setBusyId(txId);
@@ -59,7 +62,11 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
                   </span>
                 </div>
                 <div className="flex space-x-2">
-                  <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                  <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" 
+                  onClick={() => {
+                    setSelectedTxId(transaction.id);
+                    setDetailsOpen(true);
+                  }}>
                     <Eye className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
@@ -106,7 +113,10 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
                       </Button>
                     </>
                   ) : (
-                    <Button disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                    <Button disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" onClick={() => {
+                      setSelectedTxId(transaction.id);
+                      setDetailsOpen(true);
+                    }}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
@@ -118,6 +128,11 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
           {incomingTx.length === 0 && <p className="text-gray-500 text-center py-8">No requests received yet</p>}
         </div>
       </div>
+      <TransactionDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        transactionId={selectedTxId}
+      />
     </div>
   )
 }

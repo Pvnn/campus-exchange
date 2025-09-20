@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Loader2, Package, Wallet, Tag, FileText } from "lucide-react"
+import { Loader2, Package, IndianRupee, Tag, FileText } from "lucide-react"
 
 // Error message component
 const ErrorMessage = ({ message }) => (
@@ -208,7 +208,7 @@ export default function AddResourceForm({ isModalOpen, setIsModalOpen, onResourc
             {/* Price Section */}
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-gray-500" />
+                <IndianRupee className="w-4 h-4 text-gray-500" />
                 Price (₹)
               </Label>
               <div className="relative">
