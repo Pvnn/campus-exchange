@@ -1,65 +1,144 @@
+// app/profile/update/page.js
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import Link from "next/link";
+import { getProfile, updateProfile } from "@/lib/profileService";
 
-export default function ProfilePage() {
+export default function UpdateProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  //useEffect(() => {
-    //if (!user) {
-    //  router.push("/login");
-   // }
-  //}, [user, router]);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    bio: "",
+    student_id: "",
+  });
 
-  if (!user) return null;
+  const [loading, setLoading] = useState(true);
+
+  // Load profile from Supabase
+  useEffect(() => {
+    if (user) {
+      getProfile(user.id).then((profile) => {
+        if (profile) {
+          setFormData({
+            name: profile.name || "",
+            email: user.email || "", // from auth
+            phone: profile.phone || "",
+            bio: profile.bio || "",
+            student_id: profile.student_id || "",
+          });
+        }
+        setLoading(false);
+      });
+    }
+  }, [user]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+
+    try {
+      await updateProfile(user.id, {
+        phone: formData.phone,
+        bio: formData.bio,
+        email: formData.email,
+      });
+      router.push("/profile");
+    } catch (err) {
+      alert("Failed to update profile: " + err.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white shadow-lg rounded-xl p-8 max-w-lg w-full">
-        {/* Title */}
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-          Your Profile
+          Update Profile
         </h1>
 
-        {/* Profile Card */}
-        <div className="space-y-4">
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-medium text-gray-700">Name:</span>
-            <span className="text-gray-900">
-              {user?.profile?.name || "Not set"}
-            </span>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name (Read-only) */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
           </div>
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-medium text-gray-700">Email:</span>
-            <span className="text-gray-900">{user?.email || "Not set"}</span>
-          </div>
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-medium text-gray-700">Phone:</span>
-            <span className="text-gray-900">
-              {user?.profile?.phone || "Not set"}
-            </span>
-          </div>
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-medium text-gray-700">Bio:</span>
-            <span className="text-gray-900">
-              {user?.profile?.bio || "Not set"}
-            </span>
-          </div>
-        </div>
 
-        {/* Update Button */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/profile/update"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-blue-700 transition"
-          >
-            Update Profile
-          </Link>
-        </div>
+          {/* Email (Editable) */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Phone</label>
+            <input
+              type="text"
+              name="phone"
+              placeholder="Enter your phone number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+
+         
+          {/* Student ID (Read-only) */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Student ID
+            </label>
+            <input
+              type="text"
+              value={formData.student_id || "Not set"}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+
+          {/* Save Button */}
+          <div className="text-center">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-blue-700 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

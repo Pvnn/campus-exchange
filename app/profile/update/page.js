@@ -14,26 +14,35 @@ export default function UpdateProfilePage() {
     name: "",
     email: "",
     phone: "",
-    bio: "",
+    student_id: "",
   });
 
   const [loading, setLoading] = useState(true);
 
   // Load profile from Supabase
   useEffect(() => {
-    if (user) {
-      getProfile(user.id).then((profile) => {
+    const fetchProfile = async () => {
+      if (!user) return;
+
+      try {
+        const profile = await getProfile(user.id);
+
         if (profile) {
           setFormData({
             name: profile.name || "",
-            email: user.email || "", // from auth user
+            email: user.email || "",
             phone: profile.phone || "",
-            bio: profile.bio || "",
+            student_id: profile.student_id || "",
           });
         }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
         setLoading(false);
-      });
-    }
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   const handleChange = (e) => {
@@ -49,14 +58,16 @@ export default function UpdateProfilePage() {
 
     try {
       await updateProfile(user.id, {
-        // don’t allow updating name
+        email: formData.email,
         phone: formData.phone,
-        bio: formData.bio,
-        email: formData.email, // allow updating email
+        student_id: formData.student_id,
       });
-      router.push("/profile");
-    } catch (err) {
-      alert("Failed to update profile: " + err.message);
+
+      alert("Profile updated successfully!");
+      router.push("/profile"); // redirect back to profile page
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
     }
   };
 
@@ -120,16 +131,18 @@ export default function UpdateProfilePage() {
             />
           </div>
 
-          {/* Bio */}
+          {/* Student ID */}
           <div>
-            <label className="block font-medium text-gray-700 mb-1">Bio</label>
-            <textarea
-              name="bio"
-              placeholder="Write something about yourself..."
-              value={formData.bio}
+            <label className="block font-medium text-gray-700 mb-1">
+              Student ID
+            </label>
+            <input
+              type="text"
+              name="student_id"
+              placeholder="Enter your student ID"
+              value={formData.student_id}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              rows="4"
             />
           </div>
 
