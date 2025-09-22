@@ -63,7 +63,7 @@ export default function UpdateProfilePage() {
         student_id: formData.student_id,
       });
 
-      alert("Profile updated successfully!");
+      //alert("Profile updated successfully!");
       router.push("/profile"); // redirect back to profile page
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -141,8 +141,8 @@ export default function UpdateProfilePage() {
               name="student_id"
               placeholder="Enter your student ID"
               value={formData.student_id}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
             />
           </div>
 
