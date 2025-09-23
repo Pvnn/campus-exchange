@@ -111,8 +111,8 @@ export default function UpdateProfilePage() {
               name="email"
               placeholder="Enter your email"
               value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
             />
           </div>
 
@@ -141,8 +141,8 @@ export default function UpdateProfilePage() {
               name="student_id"
               placeholder="Enter your student ID"
               value={formData.student_id}
-              disabled
-              className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
