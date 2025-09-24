@@ -1,44 +1,4 @@
-/*
-How to use DetailCard in the project:
-
-
-1) Import it where needed (e.g., app/page.js):
-   import DetailCard from "@/components/DetailCard";
-
-2) In the parent page, keep a "selected" state and set it when a product is clicked:
-   const [selected, setSelected] = React.useState(null);
-   // On product click:
-   setSelected(product);
-
-3) Conditionally render DetailCard and pass product fields as props:
-   {selected && (
-     <DetailCard
-       title={selected.name}
-       description={selected.description}
-       images={[
-         { src: selected.image, alt: `${selected.name} 1` },
-         { src: selected.image, alt: `${selected.name} 2` },
-         { src: selected.image, alt: `${selected.name} 3` },
-         { src: selected.image, alt: `${selected.name} 4` },
-       ]}
-       price={selected.price ?? 140}
-       rating={selected.rating ?? 4}
-       reviewCount={selected.reviewCount ?? 128}
-       onAddToBag={(data) => console.log("Add to bag", data)}
-       onToggleWishlist={(data) => console.log("Wishlist", data)}
-     />
-   )}
-
-4) Optional: provide a close control in the parent to clear selection:
-   <button onClick={() => setSelected(null)}>Close details</button>
-
-Notes:
-- This component will re-render automatically when its props change (e.g., when a different product is selected).
-- The "use client" directive is required anywhere state and event handlers are used (this file already has it).
-*/
-
 "use client";
-// src/components/DetailCard.js
 import React, { useState } from "react";
 
 const Star = ({ filled }) => (
@@ -64,32 +24,17 @@ export default function DetailCard({
     { src: "/images/bag-3.jpg", alt: "Side view" },
     { src: "/images/bag-4.jpg", alt: "Top view" }
   ],
-  colors = [
-    { name: "Charcoal", value: "#1f2937" },
-    { name: "Stone", value: "#e5e7eb" },
-    { name: "Slate", value: "#6b7280" }
-  ],
-  features = [
-    "Multiple strap configurations",
-    "Spacious interior with top zip",
-    "Leather handle and tabs",
-    "Interior dividers",
-    "Stainless strap loops",
-    "Double stitched construction",
-    "Water-resistant"
-  ],
+  extraInfo = [], // <-- Array of available options from database [{type: "Sell"}, {type: "Rent"}]
   onAddToBag = () => {},
   onToggleWishlist = () => {}
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(colors[0]?.name ?? "");
 
   return (
     <section className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-10 md:grid-cols-2 md:gap-12 lg:py-16">
       {/* Left: Main image + thumbnails */}
       <div>
         <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={images[activeIndex]?.src}
             alt={images[activeIndex]?.alt}
@@ -110,7 +55,6 @@ export default function DetailCard({
               }`}
               aria-label={`Thumbnail ${idx + 1}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={img.src}
                 alt={img.alt}
@@ -141,41 +85,28 @@ export default function DetailCard({
 
         <p className="mt-4 text-gray-600 leading-relaxed">{description}</p>
 
-        {/* Color picker */}
-        <div className="mt-6">
-          <p className="text-sm font-medium text-gray-900">Color</p>
-          <div className="mt-3 flex items-center gap-4">
-            {colors.map((c) => {
-              const selected = selectedColor === c.name;
-              return (
-                <button
-                  key={c.name}
-                  type="button"
-                  onClick={() => setSelectedColor(c.name)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 ${
-                    selected ? "border-indigo-600" : "border-transparent"
-                  }`}
-                  aria-label={c.name}
-                  title={c.name}
-                >
-                  <span
-                    className="h-7 w-7 rounded-full"
-                    style={{ backgroundColor: c.value }}
-                  />
-                </button>
-              );
-            })}
+        {/* Extra Info (Sell / Share / Rent) */}
+        {extraInfo.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            {extraInfo.map((info, idx) => (
+              <span
+                key={idx}
+                className="bg-gray-200 px-4 py-2 text-base font-semibold text-gray-800 rounded-md transition-all duration-200 hover:bg-indigo-100 hover:text-indigo-700 cursor-pointer"
+              >
+                {info.type} {/* Shows only available options */}
+              </span>
+            ))}
           </div>
-        </div>
+        )}
 
         {/* CTA row */}
         <div className="mt-6 flex items-center gap-4">
           <button
             type="button"
-            onClick={() => onAddToBag({ title, price, color: selectedColor })}
+            onClick={() => onAddToBag({ title, price })}
             className="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 md:w-auto"
           >
-            Add to bag
+            Contact Owner
           </button>
 
           <button
@@ -198,24 +129,6 @@ export default function DetailCard({
               />
             </svg>
           </button>
-        </div>
-
-        {/* Features */}
-        <div className="mt-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-indigo-600">
-              Features
-            </h2>
-            <span className="h-px flex-1 ml-4 bg-gray-200" />
-          </div>
-          <ul className="mt-4 space-y-3 text-gray-700">
-            {features.map((f) => (
-              <li key={f} className="flex items-start gap-3">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-gray-400" />
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </section>

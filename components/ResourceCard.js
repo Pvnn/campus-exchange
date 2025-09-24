@@ -66,7 +66,7 @@ export default function ResourceCard({
   href,
   className = "",
 }) {
-  const to = href || (id != null ? `/product/${id}` : "#");
+  const to = href || (id != null ? `/resource/${id}` : "#");
 
   // Normalize and map status to a display label
   const norm = typeof status === "string" ? status.toLowerCase() : "";
@@ -115,7 +115,7 @@ export default function ResourceCard({
       {/* Price */}
       {price && (
         <p className="mt-1 text-center text-sm text-gray-900">
-          {price}
+          {`$${price}`}
         </p>
       )}
     </Link>
