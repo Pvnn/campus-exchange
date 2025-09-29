@@ -95,18 +95,6 @@ export function AppSidebar({ user, ...props }) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              tooltip="Settings"
-              className="h-8 w-8 group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-8"
-            >
-              <Link href="/settings" className="flex items-center gap-2">
-                <Settings className="size-4" />
-                <span className="group-data-[collapsible=icon]/sidebar-wrapper:sr-only text-xs">Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
               tooltip="Sign Out"
               className="h-8 w-8 group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-8"
             >
