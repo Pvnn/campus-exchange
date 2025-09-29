@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, use } from "react";
 import { Search, Filter, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,123 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import ResourceCard from "@/components/ResourceCard";
-
-// Mock data based on the ER diagram structure
-const mockResources = [
-  {
-    id: 1,
-    title: "MacBook Pro 2021",
-    description: "Excellent condition laptop for coding and design work",
-    price: "$1200",
-    type: "rent",
-    category_id: 1,
-    category_name: "Electronics",
-    availability_status: "available",
-    owner_id: 1,
-    created_at: "2024-01-15",
-    imageSrc: "/silver-macbook-on-desk.png",
-  },
-  {
-    id: 2,
-    title: "Calculus Textbook",
-    description: "Stewart's Calculus 8th Edition - barely used",
-    price: "$80",
-    type: "sale",
-    category_id: 2,
-    category_name: "Books",
-    availability_status: "available",
-    owner_id: 2,
-    created_at: "2024-01-20",
-    imageSrc: "/calculus-textbook.png",
-  },
-  {
-    id: 3,
-    title: "Bike Repair Kit",
-    description: "Complete toolkit for bicycle maintenance",
-    price: "Free",
-    type: "share",
-    category_id: 3,
-    category_name: "Tools",
-    availability_status: "available",
-    owner_id: 3,
-    created_at: "2024-01-18",
-    imageSrc: "/bike-repair-tools.jpg",
-  },
-  {
-    id: 4,
-    title: "Chemistry Lab Goggles",
-    description: "Safety goggles for chemistry experiments",
-    price: "$15",
-    type: "rent",
-    category_id: 4,
-    category_name: "Lab Equipment",
-    availability_status: "available",
-    owner_id: 4,
-    created_at: "2024-01-22",
-    imageSrc: "/safety-goggles.jpg",
-  },
-  {
-    id: 5,
-    title: "Guitar Amplifier",
-    description: "Fender practice amp, perfect for dorm room",
-    price: "$200",
-    type: "sale",
-    category_id: 5,
-    category_name: "Music",
-    availability_status: "available",
-    owner_id: 5,
-    created_at: "2024-01-25",
-    imageSrc: "/guitar-amplifier.jpg",
-  },
-  {
-    id: 6,
-    title: "Organic Chemistry Notes",
-    description: "Comprehensive study notes from last semester",
-    price: "Free",
-    type: "share",
-    category_id: 2,
-    category_name: "Books",
-    availability_status: "available",
-    owner_id: 6,
-    created_at: "2024-01-28",
-    imageSrc: "/study-notes.jpg",
-  },
-  {
-    id: 7,
-    title: "Mini Fridge",
-    description: "Compact refrigerator for dorm room",
-    price: "$30/month",
-    type: "rent",
-    category_id: 6,
-    category_name: "Appliances",
-    availability_status: "available",
-    owner_id: 7,
-    created_at: "2024-01-30",
-    imageSrc: "/mini-fridge.jpg",
-  },
-  {
-    id: 8,
-    title: "Scientific Calculator",
-    description: "TI-84 Plus CE graphing calculator",
-    price: "$90",
-    type: "sale",
-    category_id: 1,
-    category_name: "Electronics",
-    availability_status: "available",
-    owner_id: 8,
-    created_at: "2024-02-01",
-    imageSrc: "/graphing-calculator.jpg",
-  },
-];
-
-const categories = [
-  { id: 1, name: "Electronics" },
-  { id: 2, name: "Books" },
-  { id: 3, name: "Tools" },
-  { id: 4, name: "Lab Equipment" },
-  { id: 5, name: "Music" },
-  { id: 6, name: "Appliances" },
-];
+import { getResourcesData } from "@/lib/get-resources-data";
 
 const resourceTypes = [
   { value: "all", label: "All Types" },
@@ -143,24 +27,53 @@ export default function ResourcesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
+  const [resources, setResources] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter resources based on search and filters
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await getResourcesData();
+        setResources(data.resources);
+        setCategories(data.categories);
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   const filteredResources = useMemo(() => {
-    return mockResources.filter((resource) => {
+    return resources.filter((resource) => {
       const matchesSearch =
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory =
         selectedCategory === "all" ||
-        resource.category_id.toString() === selectedCategory;
+        resource.category_id?.toString() === selectedCategory;
 
       const matchesType =
         selectedType === "all" || resource.type === selectedType;
 
       return matchesSearch && matchesCategory && matchesType;
     });
-  }, [searchQuery, selectedCategory, selectedType]);
+  }, [resources, searchQuery, selectedCategory, selectedType]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading resources...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -348,10 +261,12 @@ export default function ResourcesPage() {
               <ResourceCard
                 key={resource.id}
                 id={resource.id}
-                imageSrc={resource.imageSrc}
+                imageSrc={`/placeholder.svg?height=200&width=200&query=${encodeURIComponent(
+                  resource.title
+                )}`}
                 imageAlt={resource.title}
                 title={resource.title}
-                price={resource.price}
+                price={resource.price ? `$${resource.price}` : "Free"}
                 status={resource.type}
                 className={
                   viewMode === "list"
