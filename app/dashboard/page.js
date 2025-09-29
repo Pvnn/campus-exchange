@@ -1,5 +1,5 @@
 "use client"
-
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext"
 import { useEffect, useState } from "react"
 import { getDashboardData } from "@/lib/dashboard-data"
@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null)
   const [dataLoading, setDataLoading] = useState(false)
   const [error, setError] = useState(null)
-
+  const router = useRouter();
   useEffect(() => {
     if (initialized && !loading && user) {
       console.log("Loading dashboard data for user:", user.id)
@@ -86,7 +86,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="hidden md:flex items-center space-x-3">
-          <Button size="sm" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent">
+          <Button size="sm" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent" onClick={() => router.push("/browse")}>
             <Search className="w-4 h-4 mr-2" />
             Browse Resources
           </Button>
