@@ -1,13 +1,47 @@
+"use client"
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
+import TransactionDetailsModal from "@/components/TransactionDetailsModal";
 export default function TransactionsTab({ userInitiated, othersInitiated }) {
+  const supabase = createClient();
+  const [ownTx, setOwnTx] = useState(userInitiated || []);
+  const [incomingTx, setIncomingTx] = useState(othersInitiated || []);
+  const [busyId, setBusyId] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState(null);
+  const updateTransactionStatus = async (txId, nextStatus, listSetter) => {
+    try {
+      setBusyId(txId);
+      listSetter(prev =>
+        prev.map(t => (t.id === txId ? { ...t, status: nextStatus, updated_at: new Date().toISOString() } : t))
+      );
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .eq("id", txId);
+
+      if (error) {
+        // Revert on error
+        listSetter(prev =>
+          prev.map(t => (t.id === txId ? { ...t, status: "pending" } : t))
+        );
+        console.error("Failed to update transaction:", error.message);
+      }
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Transactions You Started */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Transactions You Started ({userInitiated.length})</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Transactions You Started ({ownTx.length})</h2>
         <div className="space-y-4">
-          {userInitiated.map((transaction) => (
+          {ownTx.map((transaction) => (
             <div key={transaction.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -28,7 +62,11 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
                   </span>
                 </div>
                 <div className="flex space-x-2">
-                  <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                  <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" 
+                  onClick={() => {
+                    setSelectedTxId(transaction.id);
+                    setDetailsOpen(true);
+                  }}>
                     <Eye className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
@@ -36,15 +74,15 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
               </div>
             </div>
           ))}
-          {userInitiated.length === 0 && <p className="text-gray-500 text-center py-8">No transactions started yet</p>}
+          {ownTx.length === 0 && <p className="text-gray-500 text-center py-8">No transactions started yet</p>}
         </div>
       </div>
 
       {/* Requests on Your Resources */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Requests on Your Resources ({othersInitiated.length})</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Requests on Your Resources ({incomingTx.length})</h2>
         <div className="space-y-4">
-          {othersInitiated.map((transaction) => (
+          {incomingTx.map((transaction) => (
             <div key={transaction.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -67,15 +105,18 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
                 <div className="flex space-x-2">
                   {transaction.status === "pending" ? (
                     <>
-                      <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                      <Button onClick={() => updateTransactionStatus(transaction.id, "accepted", setIncomingTx)} disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
                         Accept
                       </Button>
-                      <Button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                      <Button onClick={() => updateTransactionStatus(transaction.id, "rejected", setIncomingTx)} disabled={busyId === transaction.id} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
                         Decline
                       </Button>
                     </>
                   ) : (
-                    <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                    <Button disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" onClick={() => {
+                      setSelectedTxId(transaction.id);
+                      setDetailsOpen(true);
+                    }}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
@@ -84,9 +125,14 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
               </div>
             </div>
           ))}
-          {othersInitiated.length === 0 && <p className="text-gray-500 text-center py-8">No requests received yet</p>}
+          {incomingTx.length === 0 && <p className="text-gray-500 text-center py-8">No requests received yet</p>}
         </div>
       </div>
+      <TransactionDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        transactionId={selectedTxId}
+      />
     </div>
   )
 }

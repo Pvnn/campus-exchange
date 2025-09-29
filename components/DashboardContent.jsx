@@ -8,9 +8,23 @@ import OverviewTab from '@/components/OverviewTab';
 import ResourcesTab from '@/components/ResourcesTab'
 import TransactionsTab from "@/components/TransactionsTab"
 import MessagesTab from "@/components/MessagesTab"
+import AddResourceForm from "./AddResourceForm"
 
 export default function DashboardContent({ initialData, user }) {
-  const [activeTab, setActiveTab] = useState("overview")
+  const [dashboardData, setDashboardData] = useState(initialData);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const handleResourceAdded = (newResource) => {
+    setDashboardData(prev => ({
+      ...prev,
+      resources: [newResource, ...(prev.resources || [])],
+      stats: {
+        ...prev.stats,
+        resourcesCount: (prev.stats?.resourcesCount || 0) + 1
+      }
+    }));
+  };
 
   // Tab navigation
   const tabs = [
@@ -37,12 +51,12 @@ export default function DashboardContent({ initialData, user }) {
               <Button
                 size="sm"
                 variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                className="cursor-pointer border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
               >
                 <Search className="w-4 h-4 mr-2" />
                 Browse Resources
               </Button>
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button onClick={() => setIsModalOpen(true)} size="sm" className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Resource
               </Button>
@@ -56,7 +70,7 @@ export default function DashboardContent({ initialData, user }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Your Resources</p>
-                  <p className="text-3xl font-bold text-gray-900">{initialData?.stats?.resourcesCount || 0}</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.resourcesCount || 0}</p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
                   <Package className="w-6 h-6 text-indigo-600" />
@@ -70,7 +84,7 @@ export default function DashboardContent({ initialData, user }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Active Deals</p>
-                  <p className="text-3xl font-bold text-gray-900">{initialData?.stats?.totalActiveTransactions || 0}</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.totalActiveTransactions || 0}</p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
                   <TrendingUp className="w-6 h-6 text-indigo-600" />
@@ -84,7 +98,7 @@ export default function DashboardContent({ initialData, user }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Messages</p>
-                  <p className="text-3xl font-bold text-gray-900">{initialData?.stats?.unreadMessages || 0}</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.unreadMessages || 0}</p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
                   <MessageCircle className="w-6 h-6 text-indigo-600" />
@@ -99,7 +113,7 @@ export default function DashboardContent({ initialData, user }) {
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">New Requests</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {initialData?.stats?.othersInitiatedTransactions || 0}
+                    {dashboardData?.stats?.othersInitiatedTransactions || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
@@ -119,25 +133,31 @@ export default function DashboardContent({ initialData, user }) {
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewTab initialData={initialData} />
+            <OverviewTab initialData={dashboardData} />
           </TabsContent>
 
           <TabsContent value="resources">
-            <ResourcesTab user={user} resources={initialData?.resources || []} />
+            <ResourcesTab user={user} resources={dashboardData?.resources || []} />
           </TabsContent>
 
           <TabsContent value="transactions">
             <TransactionsTab
-              userInitiated={initialData?.userInitiatedTransactions || []}
-              othersInitiated={initialData?.othersInitiatedTransactions || []}
+              userInitiated={dashboardData?.userInitiatedTransactions || []}
+              othersInitiated={dashboardData?.othersInitiatedTransactions || []}
             />
           </TabsContent>
 
           <TabsContent value="messages">
-            <MessagesTab user={user} messages={initialData?.messagesByTransaction || {}} />
+            <MessagesTab user={user} messages={dashboardData?.messagesByTransaction || {}} />
           </TabsContent>
         </Tabs>
       </div>
+      <AddResourceForm
+        user={user}
+        onResourceAdded={handleResourceAdded}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+      /> 
     </div>
   )
 }

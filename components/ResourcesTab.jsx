@@ -1,11 +1,26 @@
+"use client"
 import { Button } from "@/components/ui/button"
+import AddResourceForm from "./AddResourceForm"
+import { useState } from "react"
+import ViewEditResourceModal from "./ViewEditResourceModal"
 
-export default function ResourcesTab({ user, resources }) {
+export default function ResourcesTab({ user, resources: initialResources }) {
+  const [resources, setResources] = useState(initialResources || [])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState(null);
+
+  const handleResourceAdded = (newResource) => {
+    setResources((prevResources) => [newResource, ...prevResources])
+  }
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Your Resources ({resources.length})</h2>
-        <Button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+        >
           Add New Resource
         </Button>
       </div>
@@ -33,6 +48,10 @@ export default function ResourcesTab({ user, resources }) {
                 <Button
                   size="sm"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-1 rounded-md transition-colors"
+                  onClick={() => {
+                    setSelectedResourceId(resource.id);
+                    setResourceModalOpen(true);
+                  }}
                 >
                   Edit
                 </Button>
@@ -59,6 +78,23 @@ export default function ResourcesTab({ user, resources }) {
           </div>
         )}
       </div>
+      <AddResourceForm
+        user={user}
+        onResourceAdded={handleResourceAdded}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+      />
+      <ViewEditResourceModal
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+        resourceId={selectedResourceId}
+        currentUserId={user?.id}
+        onResourceUpdated={(updatedResource) => {
+          setResources(prev => 
+            prev.map(r => r.id === updatedResource.id ? updatedResource : r)
+          );
+        }}
+      />
     </div>
   )
 }
