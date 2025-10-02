@@ -95,7 +95,7 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
     } else {
       // Close modal and redirect immediately
       onOpenChange(false);
-      router.push(`/resources/${tx.resource.id}`);
+      router.push(`/resource/${tx.resource.id}`);
     }
   };
 

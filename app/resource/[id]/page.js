@@ -87,10 +87,15 @@ export default function ResourceDetailPage({ params }) {
         title={resource.title}
         description={resource.description || "No description available."}
         images={[
-          { src: resource.image || "/placeholder.png", alt: `${resource.title} 1` },
-          { src: resource.image || "/placeholder.png", alt: `${resource.title} 2` },
-          { src: resource.image || "/placeholder.png", alt: `${resource.title} 3` },
-          { src: resource.image || "/placeholder.png", alt: `${resource.title} 4` },
+          { 
+            src: resource.has_image && resource.image_url 
+              ? resource.image_url 
+              : "/placeholder.png", 
+            alt: `${resource.title} 1` 
+          },
+          { src: "/placeholder.png", alt: `${resource.title} 2` },
+          { src: "/placeholder.png", alt: `${resource.title} 3` },
+          { src: "/placeholder.png", alt: `${resource.title} 4` },
         ]}
         price={resource.price ?? 0}
         rating={resource.rating ?? 4}
@@ -116,7 +121,11 @@ export default function ResourceDetailPage({ params }) {
         <ResourceCard
           key={res.id}
           id={res.id}                        // links to /resource/[id]
-          imageSrc={res.image || "/placeholder.png"}
+          imageSrc={
+            res.has_image && res.image_url
+              ? res.image_url
+              : "/placeholder.png"
+          }
           imageAlt={res.title}
           title={res.title}
           price={res.price}
