@@ -15,6 +15,15 @@ import { Badge } from "@/components/ui/badge";
 import ResourceCard from "@/components/ResourceCard";
 import { getResourcesData } from "@/lib/get-resources-data";
 
+const getResourceImageSrc = (resource) => {
+  if (resource.has_image && resource.image_url) {
+    return resource.image_url;
+  }
+  return `/placeholder.svg?height=200&width=200&query=${encodeURIComponent(
+    resource.title
+  )}`;
+};
+
 const resourceTypes = [
   { value: "all", label: "All Types" },
   { value: "share", label: "Share" },
@@ -261,12 +270,10 @@ export default function ResourcesPage() {
               <ResourceCard
                 key={resource.id}
                 id={resource.id}
-                imageSrc={`/placeholder.svg?height=200&width=200&query=${encodeURIComponent(
-                  resource.title
-                )}`}
+                imageSrc={getResourceImageSrc(resource)}
                 imageAlt={resource.title}
                 title={resource.title}
-                price={resource.price ? `$${resource.price}` : "Free"}
+                price={resource.price ? `${resource.price}` : "Free"}
                 status={resource.type}
                 className={
                   viewMode === "list"

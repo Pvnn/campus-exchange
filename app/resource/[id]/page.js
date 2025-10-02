@@ -138,7 +138,15 @@ export default function ResourceDetailPage({ params }) {
         title={resource.title}
         description={resource.description || "No description available."}
         images={[
-          { src: resource.image || "/placeholder.png", alt: resource.title },
+          { 
+            src: resource.has_image && resource.image_url 
+              ? resource.image_url 
+              : "/placeholder.png", 
+            alt: `${resource.title} 1` 
+          },
+          { src: "/placeholder.png", alt: `${resource.title} 2` },
+          { src: "/placeholder.png", alt: `${resource.title} 3` },
+          { src: "/placeholder.png", alt: `${resource.title} 4` },
         ]}
         price={resource.price ?? 0}
         extraInfo={[
@@ -195,25 +203,30 @@ export default function ResourceDetailPage({ params }) {
       )}
 
       {/* Related Resources */}
-      {relatedResources.length > 0 && (
-        <section>
-          <h2 className="text-xl font-bold mb-4">You may also like</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {relatedResources.map((res) => (
-              <ResourceCard
-                key={res.id}
-                id={res.id}
-                imageSrc={res.image || "/placeholder.png"}
-                imageAlt={res.title}
-                title={res.title}
-                price={res.price}
-                status={res.type}
-                className="hover:shadow-lg hover:scale-105 transition-transform duration-200 ease-out"
-              />
-            ))}
-          </div>
-        </section>
-      )}
+{relatedResources.length > 0 && (
+  <section>
+    <h2 className="text-xl font-bold mb-4">You may also like</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      {relatedResources.map((res) => (
+        <ResourceCard
+          key={res.id}
+          id={res.id}                        // links to /resource/[id]
+          imageSrc={
+            res.has_image && res.image_url
+              ? res.image_url
+              : "/placeholder.png"
+          }
+          imageAlt={res.title}
+          title={res.title}
+          price={res.price}
+          status={res.type}                  // "share" | "rent" | "sale"
+          className="hover:shadow-lg hover:scale-105 transition-transform duration-200 ease-out"
+        />
+      ))}
+    </div>
+  </section>
+)}
+
     </main>
   );
 }

@@ -115,7 +115,7 @@ export default function ResourceCard({
       {/* Price */}
       {price && (
         <p className="mt-1 text-center text-sm text-gray-900">
-          {`$${price}`}
+          &#8377;{`${price}`}
         </p>
       )}
     </Link>
