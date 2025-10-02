@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, use } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 import DetailCard from "@/components/DetailCard";
 import ContactModal from "@/components/ContactModal";
 import ResourceCard from "@/components/ResourceCard";
@@ -8,14 +9,19 @@ import ResourceCard from "@/components/ResourceCard";
 export default function ResourceDetailPage({ params }) {
   const unwrappedParams = use(params);
   const id = unwrappedParams.id;
+  const router = useRouter();
 
   const supabase = createClient();
   const [resource, setResource] = useState(null);
+  const [category, setCategory] = useState(null);
   const [relatedResources, setRelatedResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [hasTransaction, setHasTransaction] = useState(false); // 👈 new state
 
   // Fetch logged-in user
   useEffect(() => {
@@ -47,6 +53,35 @@ export default function ResourceDetailPage({ params }) {
           .single();
         if (error) throw error;
         setResource(data);
+
+        if (currentUser && data.owner_id === currentUser.id) {
+          setIsOwner(true);
+        }
+
+        // Fetch category
+        if (data?.category_id) {
+          const { data: catData, error: catError } = await supabase
+            .from("categories")
+            .select("name")
+            .eq("id", data.category_id)
+            .single();
+          if (catError) throw catError;
+          setCategory(catData.name);
+        }
+
+        // Check if transaction exists for this user & resource
+        if (currentUser) {
+          const { data: existingTransaction, error: transError } =
+            await supabase
+              .from("transactions")
+              .select("*")
+              .eq("resource_id", data.id)
+              .eq("requester_id", currentUser.id)
+              .maybeSingle(); // returns null if none
+
+          if (transError) throw transError;
+          setHasTransaction(!!existingTransaction);
+        }
       } catch (err) {
         console.error(err);
         setError(err.message || "Failed to load resource");
@@ -56,9 +91,9 @@ export default function ResourceDetailPage({ params }) {
     }
 
     fetchResource();
-  }, [id]);
+  }, [id, currentUser]);
 
-  // Fetch four related resources (excluding current)
+  // Fetch related resources
   useEffect(() => {
     async function fetchRelated() {
       try {
@@ -75,6 +110,22 @@ export default function ResourceDetailPage({ params }) {
     }
     fetchRelated();
   }, [id]);
+
+  const handleEdit = () => {
+    router.push(`/dashboard/resources?edit=${id}`);
+  };
+
+  const handleContactOwner = () => {
+    if (!currentUser) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (hasTransaction) {
+      router.push("/dashboard/messages");
+      return;
+    }
+    setIsModalOpen(true);
+  };
 
   if (loading) return <p className="p-6">Loading resource...</p>;
   if (error) return <p className="p-6 text-red-500">{error}</p>;
@@ -98,19 +149,58 @@ export default function ResourceDetailPage({ params }) {
           { src: "/placeholder.png", alt: `${resource.title} 4` },
         ]}
         price={resource.price ?? 0}
-        rating={resource.rating ?? 4}
-        reviewCount={resource.reviewCount ?? 0}
-        extraInfo={resource.type ? [{ type: resource.type }] : []}
-        onAddToBag={() => setIsModalOpen(true)}
+        extraInfo={[
+          ...(resource.type ? [{ type: resource.type }] : []),
+          ...(resource.condition ? [{ type: resource.condition }] : []),
+          ...(resource.brand ? [{ type: resource.brand }] : []),
+          ...(resource.usage_duration
+            ? [{ type: resource.usage_duration }]
+            : []),
+        ]}
+        category={category}
+        isOwner={isOwner}
+        availability_status={resource.availability_status}
+        hasTransaction={hasTransaction} // 👈 updated prop
+        onAddToBag={handleContactOwner}
+        onCheckStatus={() => router.push("/dashboard/messages")} // 👈 check status handler
+        onEdit={handleEdit}
       />
 
       {/* Contact Modal */}
-      <ContactModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        resource={resource}
-        currentUser={currentUser}
-      />
+      {!isOwner && isModalOpen && (
+        <ContactModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          resource={resource}
+          currentUser={currentUser}
+          onTransactionCreated={() => setHasTransaction(true)} // 👈 updates state instantly
+        />
+      )}
+
+      {/* Login Prompt */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+          <div className="bg-white p-6 rounded-xl max-w-md w-full text-center shadow-lg">
+            <p className="mb-6 text-gray-700 text-lg">
+              You must be signed in to contact the owner.
+            </p>
+            <div className="flex flex-col gap-4">
+              <a
+                href={`/login?redirect=/resource/${id}`}
+                className="inline-block bg-indigo-700 text-white px-6 py-3 rounded-md hover:bg-indigo-600 transition"
+              >
+                Sign In
+              </a>
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Related Resources */}
 {relatedResources.length > 0 && (
