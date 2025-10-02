@@ -7,22 +7,29 @@ export default function ContactModal({
   onClose,
   resource,
   currentUser,
+  onTransactionCreated, // 👈 new callback prop
 }) {
   const supabase = createClient();
   const [message, setMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState(""); // success message state
-  const maxChars = 250;
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const maxChars = 250;
 
   if (!isOpen) return null;
 
   const handleSend = async () => {
-    if (!message.trim()) return;
-
-    if (!currentUser || !currentUser.id) {
-      return alert("You must be logged in to send a message.");
+    if (!message.trim()) {
+      setErrorMessage("Message cannot be empty");
+      return;
     }
 
+    if (!currentUser?.id) {
+      setErrorMessage("You must be logged in to send a message.");
+      return;
+    }
+
+    setErrorMessage("");
     setLoading(true);
 
     try {
@@ -52,15 +59,12 @@ export default function ContactModal({
 
         if (createError) throw createError;
         transaction = newTransaction;
-        console.log("Created new transaction:", transaction);
+
+        // Notify parent that transaction was created
+        if (onTransactionCreated) onTransactionCreated();
       } else if (transError) {
         throw transError;
-      } else {
-        console.log("Found existing transaction:", transaction);
       }
-
-      if (!transaction || !transaction.id)
-        throw new Error("Transaction not found");
 
       // 2. Insert message
       const { data: messageData, error: messageError } = await supabase
@@ -78,18 +82,17 @@ export default function ContactModal({
 
       if (messageError) throw messageError;
 
-      console.log("Message sent:", messageData);
-
-      // Show success message and auto-close after 2 seconds
       setSuccessMessage("Message sent to owner");
-      setMessage(""); // clear textarea
+      setMessage("");
+
+      // Auto-close after 2 seconds
       setTimeout(() => {
         setSuccessMessage("");
         onClose();
       }, 2000);
     } catch (err) {
       console.error("Failed to send message:", err);
-      alert(`Failed to send message. ${err.message || err}`);
+      setErrorMessage(`Failed to send message. ${err.message || err}`);
     } finally {
       setLoading(false);
     }
@@ -97,14 +100,7 @@ export default function ContactModal({
 
   return (
     <div className="fixed inset-0 min-h-screen bg-black/30 backdrop-blur-md flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-96 p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
-        >
-          ✕
-        </button>
-
+      <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative">
         <h2 className="text-xl font-bold mb-4">
           Contact about: {resource.title}
         </h2>
@@ -115,7 +111,7 @@ export default function ContactModal({
           onChange={(e) => setMessage(e.target.value)}
           maxLength={maxChars}
           placeholder="Write your message..."
-          className="w-full p-2 border rounded mb-2"
+          className="w-full p-2 border rounded-lg mb-2"
           disabled={loading || successMessage}
         />
 
@@ -123,7 +119,10 @@ export default function ContactModal({
           {message.length}/{maxChars}
         </div>
 
-        {/* Success message */}
+        {errorMessage && (
+          <div className="text-red-600 text-sm mb-2">{errorMessage}</div>
+        )}
+
         {successMessage && (
           <div className="flex items-center justify-center gap-2 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 shadow-sm animate-fadeIn">
             <svg
@@ -142,18 +141,18 @@ export default function ContactModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-center gap-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+            className="px-5 py-2 rounded-xl bg-gray-300 hover:bg-gray-400"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
-            className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-            disabled={!message.trim() || loading || successMessage}
+            className="px-9 py-2 rounded-xl bg-indigo-700 text-white hover:bg-indigo-600"
+            disabled={loading || successMessage}
           >
             {loading ? "Sending..." : "Send"}
           </button>

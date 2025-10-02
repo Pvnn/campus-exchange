@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from '@/utils/supabase/client';
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -15,8 +15,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ to read redirect
   const supabase = createClient();
+
+  // Get redirect param or default to dashboard
+  const redirect = searchParams.get("redirect") || "/dashboard";
 
   const validate = () => {
     const newErrors = {};
@@ -54,11 +59,11 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setApiError(error.message || 'Login failed');
+        setApiError(error.message || "Login failed");
       } else if (data.user) {
-        console.log('Login successful, user:', data.user.id);
+        console.log("Login successful, user:", data.user.id);
         setTimeout(() => {
-          router.replace('/dashboard');
+          router.replace(redirect); // ✅ go back to resource or fallback
         }, 100);
       }
     } catch (error) {
@@ -68,8 +73,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
