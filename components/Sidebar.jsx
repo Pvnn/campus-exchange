@@ -1,6 +1,6 @@
 "use client"
 import { Home, Package, TrendingUp, MessageCircle, Users, Settings, LogOut } from "lucide-react"
-
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 const data = {
   navMain: [
@@ -43,7 +43,17 @@ const data = {
 
 export function AppSidebar({ user, ...props }) {
   const pathname = usePathname()
-
+  const router = useRouter();
+  const { logout } = useAuth();
+  const handleLogout = async () => {
+    try {
+      await Promise.resolve(logout());
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      router.replace("/");
+    }
+  };
   return (
     <Sidebar collapsible="icon" className="border-r-0 shadow-sm" {...props}>
       <SidebarContent className="gap-0">
@@ -81,7 +91,7 @@ export function AppSidebar({ user, ...props }) {
           <SidebarMenuItem>
             <div className="flex items-center justify-center group-data-[collapsible=icon]/sidebar-wrapper:px-0 px-2 py-2">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-indigo-600 text-white text-xs">
+                <AvatarFallback className="bg-indigo-600 text-white text-xs cursor-pointer" onClick={()=>router.push("/profile")}>
                   {user?.profile?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -98,7 +108,7 @@ export function AppSidebar({ user, ...props }) {
               tooltip="Sign Out"
               className="h-8 w-8 group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-8"
             >
-              <button onClick={() => console.log("[v0] Sign out clicked")} className="flex items-center gap-2 w-full">
+              <button onClick={handleLogout} className="flex items-center gap-2 w-full">
                 <LogOut className="size-4" />
                 <span className="group-data-[collapsible=icon]/sidebar-wrapper:sr-only text-xs">Sign Out</span>
               </button>
