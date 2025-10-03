@@ -101,13 +101,16 @@ export default function DashboardPage() {
 
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Card 1: Your Resources */}
         <Link href="/dashboard/resources">
           <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Your Resources</p>
-                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.resourcesCount || 0}</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {dashboardData?.stats?.resourcesCount || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
                   <Package className="w-6 h-6 text-indigo-600" />
@@ -117,6 +120,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
+        {/* Card 2: Active Deals (pending as owner) */}
         <Link href="/dashboard/transactions">
           <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
@@ -124,7 +128,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Active Deals</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {dashboardData?.stats?.totalActiveTransactions || 0}
+                    {dashboardData?.stats?.activeDeals || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
@@ -135,13 +139,16 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
+        {/* Card 3: Messages (unreplied) */}
         <Link href="/dashboard/messages">
           <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Messages</p>
-                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.stats?.unreadMessages || 0}</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Messages Awaiting Reply</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {dashboardData?.stats?.unreadMessages || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
                   <MessageCircle className="w-6 h-6 text-indigo-600" />
@@ -151,14 +158,15 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
+        {/* Card 4: Pending Requests (initiated by user) */}
         <Link href="/dashboard/transactions">
           <Card className="border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">New Requests</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Pending Requests You Made</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {dashboardData?.stats?.othersInitiatedTransactions || 0}
+                    {dashboardData?.stats?.pendingRequests || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-indigo-50 rounded-xl">
@@ -169,6 +177,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
       </div>
+
 
       {/* Overview Content */}
       {dashboardData && <OverviewTab initialData={dashboardData} />}
