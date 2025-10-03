@@ -6,14 +6,27 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { MessageCircle, Eye, Send } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
+import TransactionDetailsModal from "@/components/TransactionDetailsModal";
 export default function MessagesTab({ messages, user }) {
   const [localMessages, setLocalMessages] = useState(messages)
-  const messageEntries = Object.entries(localMessages)
+  const messageEntries = Object.entries(localMessages).sort((a, b) => {
+    const lastMsgA = a[1][a[1].length - 1]?.created_at || 0
+    const lastMsgB = b[1][b[1].length - 1]?.created_at || 0
+    return new Date(lastMsgB) - new Date(lastMsgA) // newest first
+  })
   const [selectedTransaction, setSelectedTransaction] = useState(messageEntries[0]?.[0] || null)
   const [newMessage, setNewMessage] = useState("")
   const [sending, setSending] = useState(false)
   const currentUserId = user?.id
   const supabase = createClient()
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [transactionModalId, setTransactionModalId] = useState(null);
+  const openTransactionModal = (transactionId) => {
+    setTransactionModalId(transactionId);
+    setTransactionModalOpen(true);
+  };
+
+
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedTransaction || sending) return
@@ -203,6 +216,7 @@ export default function MessagesTab({ messages, user }) {
                 <Button
                   size="sm"
                   variant="outline"
+                  onClick={() => openTransactionModal(selectedTransaction)}
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -346,6 +360,12 @@ export default function MessagesTab({ messages, user }) {
           </Card>
         )}
       </div>
+      <TransactionDetailsModal
+        open={transactionModalOpen}
+        onOpenChange={setTransactionModalOpen}
+        transactionId={transactionModalId}
+      />
+
     </div>
   )
 }

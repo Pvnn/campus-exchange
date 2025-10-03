@@ -14,6 +14,54 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const handleUpdateStatus = async (newStatus) => {
+    if (!tx?.id) return;
+    const cleanStatus = newStatus.trim().toLowerCase();
+
+    setLoading(true);
+    try {
+      // Update transaction status
+      const { error: txError } = await supabase
+        .from("transactions")
+        .update({ status: cleanStatus })
+        .eq("id", tx.id);
+
+      if (txError) throw txError;
+
+      // If accepted, update resource availability to "unavailable"
+      if (cleanStatus === "accepted" && tx.resource_id) {
+        const { error: resError } = await supabase
+          .from("resources")
+          .update({ availability_status: "unavailable" })
+          .eq("id", tx.resource_id);
+
+        if (resError) {
+          // Log but do not throw to avoid rollback of transaction update
+          console.error("Failed to update resource availability:", resError);
+        }
+      }
+
+      // Update local state
+      setTx((prev) => ({
+        ...prev,
+        status: cleanStatus,
+        resource: {
+          ...prev.resource,
+          ...(cleanStatus === "accepted" ? { availability_status: "unavailable" } : {}),
+        },
+      }));
+
+      onOpenChange(false); 
+    } catch (error) {
+      console.error("Failed to update transaction status:", error);
+      alert("Failed to update transaction status. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAccept = () => handleUpdateStatus("accepted");
+  const handleReject = () => handleUpdateStatus("rejected");
 
   // FETCH transaction details when opened
   useEffect(() => {
@@ -222,9 +270,28 @@ export default function TransactionDetailsModal({ open, onOpenChange, transactio
         </div>
 
         <DialogFooter className="px-6 pb-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
+          {tx?.owner_id === user?.id && tx?.status === "pending" ? (
+            <>
+              <Button
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={handleAccept}
+                disabled={loading}
+              >
+                Accept
+              </Button>
+              <Button
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={handleReject}
+                disabled={loading}
+              >
+                Reject
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
       <ViewEditResourceModal
