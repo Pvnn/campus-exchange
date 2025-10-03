@@ -83,7 +83,28 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Requests on Your Resources ({incomingTx.length})</h2>
         <div className="space-y-4">
           {incomingTx.map((transaction) => (
-            <div key={transaction.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div 
+              key={transaction.id}
+              onClick={
+                transaction.status === "pending"
+                  ? () => {
+                      setSelectedTxId(transaction.id);
+                      setDetailsOpen(true);
+                    }
+                  : undefined
+              }
+              className={`bg-white border border-gray-200 rounded-lg shadow-sm p-6 ${
+                transaction.status === "pending" ? "cursor-pointer hover:bg-indigo-50" : ""
+              }`}
+              role={transaction.status === "pending" ? "button" : undefined}
+              tabIndex={transaction.status === "pending" ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (transaction.status === "pending" && (e.key === "Enter" || e.key === " ")) {
+                  setSelectedTxId(transaction.id);
+                  setDetailsOpen(true);
+                }
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{transaction.resources?.title}</h3>

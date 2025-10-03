@@ -6,14 +6,27 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { MessageCircle, Eye, Send } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
+import TransactionDetailsModal from "@/components/TransactionDetailsModal";
 export default function MessagesTab({ messages, user }) {
   const [localMessages, setLocalMessages] = useState(messages)
-  const messageEntries = Object.entries(localMessages)
+  const messageEntries = Object.entries(localMessages).sort((a, b) => {
+    const lastMsgA = a[1][a[1].length - 1]?.created_at || 0
+    const lastMsgB = b[1][b[1].length - 1]?.created_at || 0
+    return new Date(lastMsgB) - new Date(lastMsgA) // newest first
+  })
   const [selectedTransaction, setSelectedTransaction] = useState(messageEntries[0]?.[0] || null)
   const [newMessage, setNewMessage] = useState("")
   const [sending, setSending] = useState(false)
   const currentUserId = user?.id
   const supabase = createClient()
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [transactionModalId, setTransactionModalId] = useState(null);
+  const openTransactionModal = (transactionId) => {
+    setTransactionModalId(transactionId);
+    setTransactionModalOpen(true);
+  };
+
+
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedTransaction || sending) return
@@ -134,8 +147,11 @@ export default function MessagesTab({ messages, user }) {
                 (msg) => msg.type === "request" && msg.status === "pending",
               )
               const resourceName = transactionMessages[0]?.transaction?.resource?.title || "Unknown Resource"
-              const senderName =
-                transactionMessages.find((msg) => msg.sender?.id !== currentUserId)?.sender?.name || "Unknown"
+              const transaction = transactionMessages[0]?.transaction
+              const isRequester = currentUserId === transaction?.requester_id
+              const conversationPartner = isRequester ? transaction?.owner : transaction?.requester
+              const partnerName = conversationPartner?.name || conversationPartner?.email || "Unknown"
+
 
               return (
                 <button
@@ -148,13 +164,13 @@ export default function MessagesTab({ messages, user }) {
                   <div className="flex items-start space-x-3">
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="bg-indigo-600 text-white">
-                        {senderName?.charAt(0) || "T"}
+                        {partnerName?.charAt(0) || "T"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {resourceName} - {senderName}
+                          {resourceName} - {partnerName}
                         </p>
                         <div className="flex items-center space-x-1">
                           <Badge variant="secondary" className="text-xs">
@@ -200,6 +216,7 @@ export default function MessagesTab({ messages, user }) {
                 <Button
                   size="sm"
                   variant="outline"
+                  onClick={() => openTransactionModal(selectedTransaction)}
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -343,6 +360,12 @@ export default function MessagesTab({ messages, user }) {
           </Card>
         )}
       </div>
+      <TransactionDetailsModal
+        open={transactionModalOpen}
+        onOpenChange={setTransactionModalOpen}
+        transactionId={transactionModalId}
+      />
+
     </div>
   )
 }
