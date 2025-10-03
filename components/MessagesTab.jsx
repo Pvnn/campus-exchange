@@ -134,8 +134,11 @@ export default function MessagesTab({ messages, user }) {
                 (msg) => msg.type === "request" && msg.status === "pending",
               )
               const resourceName = transactionMessages[0]?.transaction?.resource?.title || "Unknown Resource"
-              const senderName =
-                transactionMessages.find((msg) => msg.sender?.id !== currentUserId)?.sender?.name || "Unknown"
+              const transaction = transactionMessages[0]?.transaction
+              const isRequester = currentUserId === transaction?.requester_id
+              const conversationPartner = isRequester ? transaction?.owner : transaction?.requester
+              const partnerName = conversationPartner?.name || conversationPartner?.email || "Unknown"
+
 
               return (
                 <button
@@ -148,13 +151,13 @@ export default function MessagesTab({ messages, user }) {
                   <div className="flex items-start space-x-3">
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="bg-indigo-600 text-white">
-                        {senderName?.charAt(0) || "T"}
+                        {partnerName?.charAt(0) || "T"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {resourceName} - {senderName}
+                          {resourceName} - {partnerName}
                         </p>
                         <div className="flex items-center space-x-1">
                           <Badge variant="secondary" className="text-xs">
