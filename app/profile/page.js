@@ -96,7 +96,9 @@ export default function ProfilePage() {
                   {profile.name || user?.email?.split('@')[0] || "User"}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Member since: {new Date(user.created_at).toLocaleDateString()}
+                  Member since: {user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString()
+                    : "Unknown"}
                 </p>
               </div>
             </div>
