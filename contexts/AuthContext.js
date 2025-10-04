@@ -56,14 +56,34 @@ export function AuthProvider({ children }) {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth event:', event, session?.user?.id);
         
         if (!isMounted) return;
 
-        setUser(session?.user || null);
-        setLoading(false);
-        setInitialized(true);
+        // FIX: Use setTimeout to avoid deadlock with async operations
+        setTimeout(async () => {
+          if (session?.user) {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('name, email')
+              .eq('id', session.user.id)
+              .single();
+
+            if (isMounted) {
+              setUser({ ...session.user, profile });
+            }
+          } else {
+            if (isMounted) {
+              setUser(null);
+            }
+          }
+          
+          if (isMounted) {
+            setLoading(false);
+            setInitialized(true);
+          }
+        }, 0);
       }
     );
 
@@ -72,25 +92,6 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, [supabase]);
-
-
-  useEffect(() => {
-    if (!user?.id || !initialized) return;
-
-    async function fetchProfile() {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('name, email')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setUser(prevUser => ({ ...prevUser, profile }));
-      }
-    }
-
-    fetchProfile();
-  }, [user?.id, initialized, supabase]);
 
   const logout = async () => {
     await supabase.auth.signOut();
