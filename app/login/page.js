@@ -99,6 +99,7 @@ export default function LoginPage() {
                 id="email"
                 name="email"
                 type="email"
+                suppressHydrationWarning
                 required
                 autoComplete="email"
                 value={form.email}
@@ -137,6 +138,7 @@ export default function LoginPage() {
               <input
                 id="password"
                 name="password"
+                suppressHydrationWarning
                 type={showPassword ? "text" : "password"}
                 required
                 autoComplete="current-password"
@@ -150,6 +152,7 @@ export default function LoginPage() {
               />
               <button
                 type="button"
+                suppressHydrationWarning
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2 top-2 text-xs text-indigo-500 bg-transparent"
                 onClick={() => setShowPassword((prev) => !prev)}
@@ -168,6 +171,7 @@ export default function LoginPage() {
               id="remember"
               name="remember"
               type="checkbox"
+              suppressHydrationWarning
               checked={form.remember}
               onChange={handleChange}
               className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
@@ -190,6 +194,7 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
+              suppressHydrationWarning
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-xs
     border border-blue-600
     hover:bg-white hover:text-indigo-600 hover:border-blue-600
