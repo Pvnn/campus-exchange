@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -17,10 +17,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ to read redirect
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // Get redirect param or default to dashboard
   const redirect = searchParams.get("redirect") || "/dashboard";
 
   const validate = () => {
@@ -63,7 +62,7 @@ export default function LoginPage() {
       } else if (data.user) {
         console.log("Login successful, user:", data.user.id);
         setTimeout(() => {
-          router.replace(redirect); // ✅ go back to resource or fallback
+          router.replace(redirect);
         }, 100);
       }
     } catch (error) {
@@ -223,5 +222,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
