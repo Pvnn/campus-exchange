@@ -70,18 +70,18 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-center pt-11 pb-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
+          <h1 className="text-4xl font-extrabold text-gray-900">
             Your Profile
           </h1>
-          <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-lg text-gray-600">
             View your personal and account details.
           </p>
         </div>
 
-        <Card className="p-8 shadow-xl border-t-4 border-indigo-600 bg-white dark:bg-gray-800 dark:border-indigo-500">
+        <Card className="p-8 shadow-xl border-t-4 border-indigo-600 bg-white">
           <CardContent className="p-0">
             {/* Header with Avatar and Name */}
             <div className="flex items-center space-x-6 pb-6 border-b border-gray-200 dark:border-gray-700 mb-6">
