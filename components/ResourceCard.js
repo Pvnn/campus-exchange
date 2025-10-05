@@ -86,7 +86,7 @@ export default function ResourceCard({
                   ${className}`}
     >
       {/* Image */}
-      <div className="aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 relative">
+      <div className="aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 relative">
         {imageSrc ? (
           <img
             src={imageSrc}
