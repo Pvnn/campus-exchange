@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, use } from "react";
-import { Search, Filter, Grid, List } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import ResourceCard from "@/components/ResourceCard";
 import { getResourcesData } from "@/lib/get-resources-data";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getResourceImageSrc = (resource) => {
   if (resource.has_image && resource.image_url) {
@@ -28,17 +29,17 @@ const resourceTypes = [
   { value: "all", label: "All Types" },
   { value: "share", label: "Share" },
   { value: "rent", label: "Rent" },
-  { value: "sale", label: "Sale" },
+  { value: "sell", label: "Sale" },
 ];
 
 export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
-  const [viewMode, setViewMode] = useState("grid");
   const [resources, setResources] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchData() {
@@ -58,6 +59,9 @@ export default function ResourcesPage() {
 
   const filteredResources = useMemo(() => {
     return resources.filter((resource) => {
+      // Filter by current user if logged in
+      const matchesUser = !user || resource.owner_id === user.id;
+
       const matchesSearch =
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -69,9 +73,9 @@ export default function ResourcesPage() {
       const matchesType =
         selectedType === "all" || resource.type === selectedType;
 
-      return matchesSearch && matchesCategory && matchesType;
+      return matchesUser && matchesSearch && matchesCategory && matchesType;
     });
-  }, [resources, searchQuery, selectedCategory, selectedType]);
+  }, [resources, searchQuery, selectedCategory, selectedType, user]);
 
   if (loading) {
     return (
@@ -88,7 +92,7 @@ export default function ResourcesPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
@@ -98,29 +102,13 @@ export default function ResourcesPage() {
                 Discover items shared by your campus community
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <div className="bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
@@ -185,7 +173,7 @@ export default function ResourcesPage() {
       </div>
 
       {/* Results Summary */}
-      <div className="container mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {filteredResources.length} resource
@@ -235,7 +223,7 @@ export default function ResourcesPage() {
       </div>
 
       {/* Resources Grid */}
-      <div className="container mx-auto px-4 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {filteredResources.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto h-24 w-24 text-muted-foreground mb-4">
@@ -259,13 +247,7 @@ export default function ResourcesPage() {
             </Button>
           </div>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            }
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredResources.map((resource) => (
               <ResourceCard
                 key={resource.id}
@@ -275,11 +257,6 @@ export default function ResourcesPage() {
                 title={resource.title}
                 price={resource.price ? `${resource.price}` : "Free"}
                 status={resource.type}
-                className={
-                  viewMode === "list"
-                    ? "flex flex-row items-center gap-4 p-4"
-                    : ""
-                }
               />
             ))}
           </div>
