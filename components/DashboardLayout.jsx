@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }) {
         </div>
         
         {/* Main content */}
-        <div className="flex flex-1 flex-col gap-6 p-10 pt-8">{children}</div>
+        <div className="flex flex-1 flex-col gap-6 p-10">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )
