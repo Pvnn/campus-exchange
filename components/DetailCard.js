@@ -10,10 +10,10 @@ export default function DetailCard({
   category = null,
   isOwner = false,
   availability_status = "available",
-  hasTransaction = false, // 👈 new prop
+  hasTransaction = false, 
   onAddToBag = () => {},
   onEdit = () => {},
-  onCheckStatus = () => {}, // 👈 new prop
+  onCheckStatus = () => {},
 }) {
   const isAvailable = availability_status?.toLowerCase() === "available";
 
@@ -21,7 +21,7 @@ export default function DetailCard({
     <section className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-10 md:grid-cols-2 md:gap-12 lg:py-16">
       {/* Left: Main image */}
       <div>
-        <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
+        <div className="aspect-square w-full overflow-hidden rounded-2xl">
           <img
             src={images[0]?.src}
             alt={images[0]?.alt}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DetailCard from "@/components/DetailCard";
 import ContactModal from "@/components/ContactModal";
 import ResourceCard from "@/components/ResourceCard";
-
+import { ArrowLeft } from "lucide-react";
 export default function ResourceDetailPage({ params }) {
   const unwrappedParams = use(params);
   const id = unwrappedParams.id;
@@ -21,7 +21,7 @@ export default function ResourceDetailPage({ params }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [hasTransaction, setHasTransaction] = useState(false); // 👈 new state
+  const [hasTransaction, setHasTransaction] = useState(false); 
 
   // Fetch logged-in user
   useEffect(() => {
@@ -101,6 +101,7 @@ export default function ResourceDetailPage({ params }) {
           .from("resources")
           .select("*")
           .neq("id", id)
+          .eq("availability_status", "available")
           .limit(4);
         if (error) throw error;
         setRelatedResources(data || []);
@@ -133,6 +134,13 @@ export default function ResourceDetailPage({ params }) {
 
   return (
     <main className="container mx-auto p-6 space-y-10">
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group mb-2"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
       {/* Main DetailCard */}
       <DetailCard
         title={resource.title}
@@ -160,9 +168,9 @@ export default function ResourceDetailPage({ params }) {
         category={category}
         isOwner={isOwner}
         availability_status={resource.availability_status}
-        hasTransaction={hasTransaction} // 👈 updated prop
+        hasTransaction={hasTransaction} 
         onAddToBag={handleContactOwner}
-        onCheckStatus={() => router.push("/dashboard/messages")} // 👈 check status handler
+        onCheckStatus={() => router.push("/dashboard/messages")} 
         onEdit={handleEdit}
       />
 
@@ -173,7 +181,7 @@ export default function ResourceDetailPage({ params }) {
           onClose={() => setIsModalOpen(false)}
           resource={resource}
           currentUser={currentUser}
-          onTransactionCreated={() => setHasTransaction(true)} // 👈 updates state instantly
+          onTransactionCreated={() => setHasTransaction(true)} 
         />
       )}
 
