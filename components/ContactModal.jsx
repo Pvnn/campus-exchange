@@ -1,13 +1,17 @@
 "use client";
 import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, MessageCircle, CheckCircle2 } from "lucide-react";
 
 export default function ContactModal({
   isOpen,
   onClose,
   resource,
   currentUser,
-  onTransactionCreated, // 👈 new callback prop
+  onTransactionCreated,
 }) {
   const supabase = createClient();
   const [message, setMessage] = useState("");
@@ -15,8 +19,6 @@ export default function ContactModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const maxChars = 250;
-
-  if (!isOpen) return null;
 
   const handleSend = async () => {
     if (!message.trim()) {
@@ -99,65 +101,81 @@ export default function ContactModal({
   };
 
   return (
-    <div className="fixed inset-0 min-h-screen bg-black/30 backdrop-blur-md flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative">
-        <h2 className="text-xl font-bold mb-4">
-          Contact about: {resource.title}
-        </h2>
-        <p className="mb-2 text-gray-700">{resource.description}</p>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[540px] p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
+          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-gray-500" />
+            Contact Owner
+          </DialogTitle>
+          <p className="text-sm text-gray-600 mt-1">Send a message about this resource</p>
+        </DialogHeader>
 
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          maxLength={maxChars}
-          placeholder="Write your message..."
-          className="w-full p-2 border rounded-lg mb-2"
-          disabled={loading || successMessage}
-        />
+        <div className="px-6 pb-6">
+          <div className="space-y-4">
+            {/* Resource Info */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="text-sm font-semibold text-gray-900 mb-1">{resource.title}</div>
+              <div className="text-sm text-gray-600">{resource.description}</div>
+            </div>
 
-        <div className="text-right text-sm text-gray-500 mb-2">
-          {message.length}/{maxChars}
+            {/* Message Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Your message</label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={maxChars}
+                placeholder="Write your message to the owner..."
+                className="min-h-[120px] resize-none"
+                disabled={loading || successMessage}
+              />
+              <div className="text-right text-xs text-gray-500">
+                {message.length}/{maxChars}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm font-medium">{successMessage}</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {errorMessage && (
-          <div className="text-red-600 text-sm mb-2">{errorMessage}</div>
-        )}
-
-        {successMessage && (
-          <div className="flex items-center justify-center gap-2 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 shadow-sm animate-fadeIn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8.364 8.364a1 1 0 01-1.414 0L3.293 11.707a1 1 0 011.414-1.414L8 13.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="font-semibold">{successMessage}</span>
-          </div>
-        )}
-
-        <div className="flex justify-center gap-4">
-          <button
+        <DialogFooter className="px-6 pb-6 pt-4 border-t">
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-gray-300 hover:bg-gray-400"
             disabled={loading}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            className="bg-indigo-600 text-white hover:bg-indigo-700"
             onClick={handleSend}
-            className="px-9 py-2 rounded-xl bg-indigo-700 text-white hover:bg-indigo-600"
             disabled={loading || successMessage}
           >
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </div>
-      </div>
-    </div>
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Send Message"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

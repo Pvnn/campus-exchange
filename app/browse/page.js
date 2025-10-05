@@ -71,8 +71,7 @@ function ResourcesContent() {
 
   const filteredResources = useMemo(() => {
     return resources.filter((resource) => {
-      // Filter by current user if logged in
-      const matchesUser = !user || resource.owner_id === user.id;
+      const matchesUser = !user || resource.owner_id !== user.id;
 
       const matchesSearch =
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
