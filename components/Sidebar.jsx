@@ -55,12 +55,14 @@ export function AppSidebar({ user, ...props }) {
     }
   };
   return (
-    <Sidebar collapsible="icon" className="border-r-0 shadow-sm" {...props}>
+    <Sidebar collapsible="icon" className="border-r-0 shadow-sm z-50" {...props}>
       <SidebarContent className="gap-0">
         <div className="flex h-12 items-center justify-center border-b px-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
-            <Users className="size-4" />
-          </div>
+          <img 
+            src="/icon.png" 
+            alt="Campus Exchange" 
+            className="size-8 rounded-lg"
+          />
         </div>
 
         <SidebarGroup className="px-0">

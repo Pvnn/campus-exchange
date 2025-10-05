@@ -243,8 +243,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mission Statement - Full Width */}
-      <section className="relative min-h-[60vh] flex items-center">
+      {/* Mission Statement */}
+      <section className="relative min-h-[60vh] flex items-center" id="about">
         <Image
           src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80"
           alt="Students collaborating"
@@ -274,7 +274,7 @@ export default function HomePage() {
       </section>
 
       {/* Contact Section - Subtle Background */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-12" id="contact">
         <div className="w-full px-6 sm:px-8 lg:px-12 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Get in Touch</h2>
           <p className="text-base text-gray-600 mb-5">
