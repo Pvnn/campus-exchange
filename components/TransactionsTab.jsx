@@ -18,22 +18,48 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
         prev.map(t => (t.id === txId ? { ...t, status: nextStatus, updated_at: new Date().toISOString() } : t))
       );
 
-      const { error } = await supabase
+      const cleanStatus = nextStatus.trim().toLowerCase();
+
+      // Update transaction status
+      const { error: txError } = await supabase
         .from("transactions")
-        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .update({ status: cleanStatus, updated_at: new Date().toISOString() })
         .eq("id", txId);
 
-      if (error) {
+      if (txError) {
         // Revert on error
         listSetter(prev =>
           prev.map(t => (t.id === txId ? { ...t, status: "pending" } : t))
         );
-        console.error("Failed to update transaction:", error.message);
+        console.error("Failed to update transaction:", txError.message);
+        return;
+      }
+
+      // If accepted, update resource availability to "unavailable"
+      if (cleanStatus === "accepted") {
+        // Get the transaction to find resource_id
+        const { data: txData, error: fetchError } = await supabase
+          .from("transactions")
+          .select("resource_id")
+          .eq("id", txId)
+          .single();
+
+        if (!fetchError && txData?.resource_id) {
+          const { error: resError } = await supabase
+            .from("resources")
+            .update({ availability_status: "unavailable" })
+            .eq("id", txData.resource_id);
+
+          if (resError) {
+            console.error("Failed to update resource availability:", resError);
+          }
+        }
       }
     } finally {
       setBusyId(null);
     }
   };
+
 
   return (
     <div className="space-y-8">
@@ -126,18 +152,38 @@ export default function TransactionsTab({ userInitiated, othersInitiated }) {
                 <div className="flex space-x-2">
                   {transaction.status === "pending" ? (
                     <>
-                      <Button onClick={() => updateTransactionStatus(transaction.id, "accepted", setIncomingTx)} disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateTransactionStatus(transaction.id, "accepted", setIncomingTx);
+                        }} 
+                        disabled={busyId === transaction.id} 
+                        className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
+                      >
                         Accept
                       </Button>
-                      <Button onClick={() => updateTransactionStatus(transaction.id, "rejected", setIncomingTx)} disabled={busyId === transaction.id} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateTransactionStatus(transaction.id, "rejected", setIncomingTx);
+                        }} 
+                        disabled={busyId === transaction.id} 
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                      >
                         Decline
                       </Button>
                     </>
                   ) : (
-                    <Button disabled={busyId === transaction.id} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" onClick={() => {
-                      setSelectedTxId(transaction.id);
-                      setDetailsOpen(true);
-                    }}>
+                    <Button 
+                      disabled={busyId === transaction.id} 
+                      className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTxId(transaction.id);
+                        setDetailsOpen(true);
+                      }}
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
