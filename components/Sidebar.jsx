@@ -55,7 +55,7 @@ export function AppSidebar({ user, ...props }) {
     }
   };
   return (
-    <Sidebar collapsible="icon" className="border-r-0 shadow-sm z-50" {...props}>
+    <Sidebar collapsible="icon" className="border-r shadow-sm" {...props}>
       <SidebarContent className="gap-0">
         <div className="flex h-12 items-center justify-center border-b px-2">
           <img 

@@ -131,7 +131,7 @@ export default function MessagesTab({ messages, user }) {
   }, [selectedTransaction, currentUserId])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
       {/* Conversations List */}
       <Card className="border border-gray-200 shadow-sm bg-white">
         <CardHeader className="pb-3">

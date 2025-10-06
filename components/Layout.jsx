@@ -19,6 +19,7 @@ export default function Layout({ children }) {
 
   // Pages that should not have navbar/footer
   const noLayoutPages = ['/login', '/register', '/error'];
+  const isDashboard = pathname?.startsWith('/dashboard');
 
   // Scroll to section if element exists
   const navigateToSection = (id) => {
@@ -40,11 +41,10 @@ export default function Layout({ children }) {
     setTimeout(() => requestAnimationFrame(() => attemptScroll()), 100);
   };
 
-
   const scrollToId = (id) => {
     const el = document.getElementById(id);
     if (el) {
-      const navbarHeight = 64; // h-16 = 64px
+      const navbarHeight = 64;
       const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
       const offsetPosition = elementPosition - navbarHeight;
       
@@ -206,10 +206,10 @@ export default function Layout({ children }) {
         </div>
       </Dialog>
 
-      {/* Desktop Navbar */}
-      <header className="sticky top-0 z-30 bg-white">
-        <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="border-b border-gray-200">
+      {/* Desktop Navbar - only on non-dashboard pages */}
+      {!isDashboard && (
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+          <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
               {/* Mobile menu button */}
               <button
@@ -307,17 +307,19 @@ export default function Layout({ children }) {
                 )}
               </div>
             </div>
-          </div>
-        </nav>
-      </header>
+          </nav>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 flex flex-col">{children}</main>
 
-      {/* Footer */}
-      <footer className="border-t p-4 text-center text-sm text-gray-600">
-        © 2025 Campus Exchange. All rights reserved.
-      </footer>
+      {/* Footer - only on non-dashboard pages */}
+      {!isDashboard && (
+        <footer className="border-t p-4 text-center text-sm text-gray-600">
+          © 2025 Campus Exchange. All rights reserved.
+        </footer>
+      )}
     </div>
   );
 }
