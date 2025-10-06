@@ -72,8 +72,8 @@ export default function ResourceCard({
   const norm = typeof status === "string" ? status.toLowerCase() : "";
   const label =
     norm === "share" ? "SHARE" :
-    norm === "rent"  ? "RENT"  :
-    norm === "sale"  ? "SALE"  :
+    norm === "lend"  ? "RENT"  :
+    norm === "sell"  ? "SALE"  :
     null;
 
   return (
