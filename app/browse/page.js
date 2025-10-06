@@ -29,7 +29,7 @@ const getResourceImageSrc = (resource) => {
 const resourceTypes = [
   { value: "all", label: "All Types" },
   { value: "share", label: "Share" },
-  { value: "rent", label: "Rent" },
+  { value: "lend", label: "Rent" },
   { value: "sell", label: "Sale" },
 ];
 
