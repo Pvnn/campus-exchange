@@ -108,7 +108,7 @@ export default function ResourcesTab({ user, resources: initialResources }) {
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No resources yet</h3>
             <p className="text-gray-600 mb-4">Start by adding your first resource to share with others.</p>
-            <Button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+            <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
               Add Your First Resource
             </Button>
           </div>
