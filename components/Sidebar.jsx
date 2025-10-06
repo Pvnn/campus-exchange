@@ -74,7 +74,7 @@ export function AppSidebar({ user, ...props }) {
                     asChild
                     isActive={pathname === item.url}
                     tooltip={item.title}
-                    className="h-10 w-10 group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-10"
+                    className="h-10 w-full justify-start group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-10"
                   >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon className="size-4" />
@@ -108,7 +108,7 @@ export function AppSidebar({ user, ...props }) {
             <SidebarMenuButton
               asChild
               tooltip="Sign Out"
-              className="h-8 w-8 group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-8"
+              className="h-8 w-full justify-start group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:w-8"
             >
               <button onClick={handleLogout} className="flex items-center gap-2 w-full">
                 <LogOut className="size-4" />
