@@ -133,12 +133,12 @@ export default function MessagesTab({ messages, user }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
       {/* Conversations List */}
-      <Card className="border border-gray-200 shadow-sm bg-white">
+      <Card className="border border-gray-200 shadow-sm bg-white max-h-[600px] flex flex-col">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Conversations</CardTitle>
           <CardDescription>Your transaction messages</CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-y-auto flex-1">
           <div className="space-y-1">
             {messageEntries.map(([transactionId, transactionMessages]) => {
               const lastMessage = transactionMessages[transactionMessages.length - 1]
@@ -206,7 +206,7 @@ export default function MessagesTab({ messages, user }) {
       {/* Chat Interface */}
       <div className="lg:col-span-2">
         {selectedTransaction ? (
-          <Card className="border border-gray-200 shadow-sm bg-white h-full flex flex-col">
+          <Card className="border border-gray-200 shadow-sm bg-white flex flex-col h-[600px]">
             <CardHeader className="pb-3 border-b">
               <div className="flex items-center justify-between">
                 <div>
@@ -226,7 +226,7 @@ export default function MessagesTab({ messages, user }) {
             </CardHeader>
 
             {/* Messages */}
-            <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
+            <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
               {localMessages[selectedTransaction]?.map((message, index) => {
                 const isCurrentUser = message.sender?.id === currentUserId
 
@@ -351,7 +351,7 @@ export default function MessagesTab({ messages, user }) {
             </div>
           </Card>
         ) : (
-          <Card className="border border-gray-200 shadow-sm bg-white h-full flex items-center justify-center">
+          <Card className="border border-gray-200 shadow-sm bg-white h-[600px] flex items-center justify-center">
             <div className="text-center">
               <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Select a conversation</h3>
