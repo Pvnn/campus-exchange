@@ -67,7 +67,7 @@ export default function HomePage() {
             </Link>
           ) : (
             <Link
-              href="/register"
+              href="/browse"
               className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-lg text-base font-semibold hover:bg-gray-100 transition shadow-lg"
             >
               Browse Resources
