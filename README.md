@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎓 Campus Exchange — Student Resource Sharing Platform
 
-## Getting Started
+## Overview
+Campus Exchange is a full‑stack web application that enables students to list, lend, sell, and borrow academic resources (textbooks, lab kits, stationery, notes) within a campus network. The platform delivers secure authentication, transaction workflows, and realtime messaging backed by a normalized PostgreSQL schema and cloud storage. It is built for production deployment on Vercel with Supabase as the backend platform.
 
-First, run the development server:
+The app connects students as owners and requesters to streamline peer‑to‑peer exchanges with transparency and auditability.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+***
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Highlights
+- Secure account system with Supabase Auth and protected dashboard
+- Resource listings with images, categories, pricing/type, and availability
+- Transaction workflow with owner actions (Accept/Reject) and automatic inventory state updates
+- Realtime, transaction‑scoped messaging using Supabase Realtime
+- Activity logging (activity_log) to capture key user actions
+- Responsive dashboard UI with collapsible sidebar and consistent layouts
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Live
+- Application: https://campus-exchange-zghc.vercel.app/
 
-## Learn More
+***
 
-To learn more about Next.js, take a look at the following resources:
+## Project Development Steps
+1. Requirements and UX flows for listing, messaging, and transactions
+2. Database schema design (6 tables) and storage buckets
+3. Authentication integration and route protection
+4. Resource CRUD with image uploads and category taxonomy
+5. Transaction lifecycle with availability sync and activity logs
+6. Realtime messaging UI with scroll‑synced panes
+7. Vercel deployment with environment‑driven configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+***
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
+- Frontend: Next.js (App Router), React, Tailwind CSS, shadcn/ui
+- Server: Next.js server components and route handlers
+- Backend: Supabase (Auth, PostgreSQL, Storage, Realtime)
+- Infra: Vercel hosting and CDN
 
-## Deploy on Vercel
+High‑level flow:
+1. Users sign in via Supabase Auth
+2. Owners create resources with images and availability
+3. Requesters initiate transactions; owners Accept/Reject
+4. On Accept, the linked resource availability_status → “unavailable”
+5. Parties chat in realtime within the transaction thread
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Architecture diagram :
+
+
+![architecture diagram](docs/architecture.png)
+
+***
+
+## Data Model
+Tables (Supabase PostgreSQL):
+- users
+- resources
+- categories
+- transactions
+- messages
+
+
+***
+
+## Core Modules
+- Authentication: email/password with persistent sessions
+- Resources: create/edit/delete, upload images to Storage, assign categories, manage availability
+- Transactions: requester → owner flow, Accept/Reject, automatic availability updates
+- Messages: realtime chat per transaction with scrollable conversation and fixed input
+- Dashboard: sidebar navigation, overview metrics, recent activity
+
+***
+## Acknowledgments
+Built using Next.js and Supabase. Thanks to the Supabase and shadcn communities for excellent tooling and documentation.
